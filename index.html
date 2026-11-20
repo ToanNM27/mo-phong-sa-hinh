@@ -57,7 +57,9 @@
 .cockpit .windshield{width:100%;aspect-ratio:19/11;max-height:44svh;object-fit:contain}
 .cockpit-mirrors{position:absolute;left:3%;right:3%;bottom:5%;display:flex;justify-content:space-between;pointer-events:none}
 .cockpit-mirrors figure{margin:0;width:31%;max-width:230px}
-.cockpit-mirrors canvas{border:3px solid #162323;border-radius:12px;background:#527b58;transform:scaleX(-1)}
+.cockpit-mirrors figure:last-child{width:27%;max-width:200px}
+.cockpit-mirrors figure:last-child canvas{border-radius:16px 9px 12px 15px}
+.cockpit-mirrors canvas{border:3px solid #162323;border-radius:12px;background:#527b58}
 .cockpit-mirrors figcaption{width:max-content;margin:3px auto 0;background:#162323;color:#eef7ef;padding:2px 7px;border-radius:4px;font-size:clamp(11px,2vw,14px)}
 .mirror-settings{padding:8px 12px;background:#233333}
 .mirror-settings summary{cursor:pointer;padding:5px 0;font-weight:650}
@@ -83,8 +85,8 @@
 <details class="mirror-settings">
 <summary>Chỉnh gương</summary>
 <div class="mirror-settings-grid">
-<fieldset><legend>Gương trái</legend><label>Trong ↔ Ngoài<input type="range" min="-8" max="42" value="11"></label><label>Lên ↔ Xuống<input type="range" min="-15" max="30" value="16"></label></fieldset>
-<fieldset><legend>Gương phải</legend><label>Trong ↔ Ngoài<input type="range" min="-8" max="42" value="11"></label><label>Lên ↔ Xuống<input type="range" min="-15" max="30" value="16"></label></fieldset>
+<fieldset><legend>Gương trái</legend><label>Trong ↔ Ngoài<input type="range" min="-8" max="42" value="11"></label><label>Lên ↔ Xuống<input type="range" min="-15" max="30" value="9"></label></fieldset>
+<fieldset><legend>Gương phải</legend><label>Trong ↔ Ngoài<input type="range" min="-8" max="42" value="11"></label><label>Lên ↔ Xuống<input type="range" min="-15" max="30" value="9"></label></fieldset>
 </div>
 <button type="button" data-reset-mirrors>Đặt lại gương</button>
 </details></div>
@@ -103,7 +105,7 @@
 <section class="card feedback"><h2 id="lesson">Ghép ngang</h2><div id="zigzag-choices" class="actions" hidden aria-label="Chiều chạy"><button data-mode="zigzagForward" aria-pressed="false">Xuôi</button><button data-mode="zigzagReverse" aria-pressed="false">Ngược</button></div><p id="status" role="status"></p><p class="hint" id="tip"></p></section>
 <div class="actions"><button id="center">Trả lái</button><button id="reset">Tập lại</button><button id="guide" aria-pressed="false">Quỹ đạo</button><button id="alignment" aria-pressed="false">Canh thân xe</button><button id="cockpit-toggle" aria-pressed="false">Buồng lái</button><button id="placement" aria-pressed="false">Dời / xoay xe</button></div>
 </aside></div></main>
-<script src="./cockpit.js?v=2"></script>
+<script src="./cockpit.js?v=3"></script>
 <script>
 'use strict';
 const byId = id => document.getElementById(id);
