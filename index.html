@@ -43,11 +43,11 @@ const lessons = {
   zigzagReverse: {...slalom, name:'Hình chữ chi', start:[681,328,Math.PI/2], finish:155,
     tip:'Dùng S hoặc ↓ để chạy lùi từ phải sang trái, giữ cả xe giữa hai vạch gấp khúc.'},
   parallel: {name:'Ghép ngang', start:[516,162,0], goal:[608,328,0,78,156],
-    parked:[[608,162,0],[608,489,0]], road:[25,656,14,606],
+    parked:[[608,162,0],[608,489,0]], road:[215,656,14,606],
     tip:'Xe bắt đầu ngang xe đỗ phía trên. Khi lùi, đánh phải để đuôi vào ô rồi đánh trái để thân xe song song với lề.'},
-  perpendicular: {name:'Ghép dọc', start:[407,323,-Math.PI/2], goal:[442,503,0,86,146],
+  perpendicular: {name:'Ghép dọc', start:[630,376,-Math.PI/2], goal:[442,503,0,86,146],
     pocket:[392,492,425], parked:[], road:[69,736,150,585],
-    tip:'Tiến qua miệng chuồng về bên trái. Đánh trái khi lùi để đưa đuôi vào chuồng, rồi trả lái theo vạch giữa.'}
+    tip:'Tiến chếch ra khỏi lề dưới rồi đi qua miệng chuồng về bên trái. Đánh trái khi lùi để đưa đuôi vào chuồng, rồi trả lái theo vạch giữa.'}
 };
 const clamp = (n,min,max) => Math.max(min,Math.min(max,n));
 const parkingAngleLimit = Math.sin(4*Math.PI/180);
@@ -55,6 +55,7 @@ let mode, lesson, car, steer, speed, won, showGuide = false, showAlignment = fal
 function reset(next = mode) {
   mode=next;
   lesson=lessons[mode];
+  byId('map').width=mode==='parallel'?W-200:W;
   const [x,y,a]=lesson.start;
   car={x,y,a};
   steer=speed=bumpUntil=0;
@@ -209,17 +210,27 @@ function drawSlalom(){
   label('ĐÍCH',lesson.finish,328+half+21,'#d6f77b',15);
 }
 function draw() {
+  ctx.save();
+  const parallel=mode==='parallel';
+  if(parallel)ctx.translate(-200,0);
   rect(0,0,W,H,0,'#303e41');
   ctx.drawImage(asphalt,0,0);
-  const parallel=mode==='parallel';
   if(lesson.lane){
     drawSlalom();
   }else if(parallel){
     rect(657,0,103,H,0,'#63706a');
     for(let y=0;y<H;y+=41)line(659,y,760,y,'#4b5b55');
     curb(656,0,656,H);
-    line(164,0,164,H,'#d9ae57',3);line(173,0,173,H,'#d9ae57',3);
-    ctx.setLineDash([25,17]);line(354,0,354,H,'#c9d2cd',2);ctx.setLineDash([]);
+    rect(0,0,215,H,0,'#63706a');
+    line(215,0,215,H,'#c4cbc0',3);
+    ctx.setLineDash([25,17]);line(390,0,390,H,'#e4e8dc',2);ctx.setLineDash([]);
+    for(const x of [302,478]){
+      for(const y of [84,319,550]){
+        line(x,y+16,x,y-12,'#aebdb5',3);
+        line(x-7,y-5,x,y-12,'#aebdb5',3);
+        line(x+7,y-5,x,y-12,'#aebdb5',3);
+      }
+    }
     for(const y of [55,220,390,555]){rect(699,y-30,61,60,8,'#3a5345');tree(732,y,23);}
     for(const y of [221,432])line(559,y,654,y,'#cfd9cd',3);
   }else{
@@ -277,6 +288,7 @@ function draw() {
     line(x0,y0,x1,y1,'#ffffff',3);
   }
   vehicle(car,true,'#62b647');
+  ctx.restore();
 }
 function setStatus(message){
   if(byId('status').textContent!==message)byId('status').textContent=message;
