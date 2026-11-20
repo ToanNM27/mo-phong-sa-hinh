@@ -189,11 +189,25 @@ function createCockpit(panel, point, corners) {
     // transition to the wider panoramic projection at the side windows.
     ctx.fillStyle='#263637';
     ctx.fillRect(0,0,w,h);
+    function sideBlend(offset,edge){
+      const t=Math.min(1,Math.max(0,(offset-.31)/(Math.min(.43,edge)-.31)));
+      return t*t*(3-2*t);
+    }
     function angleAt(u){
       const offset=u-.53, edge=offset<0 ? .53 : .47;
-      const amount=Math.max(0,(Math.abs(offset)-.28)/(edge-.28));
-      const rectilinear=Math.atan(offset/.51);
-      return rectilinear+Math.sign(offset)*(Math.PI*.46-Math.atan(edge/.51))*amount**2;
+      const distance=Math.abs(offset), outerAngle=Math.PI*.46;
+      const correction=outerAngle-Math.atan(edge/.51);
+      const angleAtDistance=d=>Math.atan(d/.51)+correction*(Math.max(0,(d-.28)/(edge-.28)))**2;
+      const original=angleAtDistance(distance);
+      const blend=sideBlend(distance,edge);
+      if(!blend)return Math.sign(offset)*original;
+      // At the side window, move linearly across that camera's image plane.
+      // This preserves straight lines there in addition to the windshield.
+      const inner=Math.tan(angleAtDistance(.31)-yawStep);
+      const outer=Math.tan(outerAngle-yawStep);
+      const fraction=(distance-.31)/(edge-.31);
+      const local=yawStep+Math.atan(inner+(outer-inner)*fraction);
+      return Math.sign(offset)*(original*(1-blend)+local*blend);
     }
     for(let x=0;x<w;x+=2){
       const stripWidth=Math.min(2,w-x);
@@ -206,34 +220,37 @@ function createCockpit(panel, point, corners) {
       const focal=canvas.width*.63;
       const sourceX=canvas.width*.5+Math.tan(relative)*focal;
       const sourceWidth=Math.max(1,focal*(angleAt(end)-angleAt(start))/Math.cos(relative)**2);
-      const blend=Math.min(1,Math.max(0,(Math.abs(u-.53)-.28)/.22));
+      const offset=u-.53;
+      const distance=Math.abs(offset);
+      const blend=Math.min(1,Math.max(0,(distance-.28)/.22));
       const perspective=Math.cos(angle)*(1-blend)+blend;
-      const zoom=h*.86/focal*Math.cos(relative)/perspective;
+      const local=sideBlend(distance,offset<0 ? .53 : .47);
+      const zoom=h*.86/focal*(Math.cos(relative)/perspective*(1-local)+local);
       ctx.drawImage(canvas,sourceX-sourceWidth/2,0,sourceWidth,canvas.height,
         x,h*.35-canvas.height*.35*zoom,stripWidth,canvas.height*zoom);
     }
 
     ctx.fillStyle='#263637';
     ctx.beginPath();
-    ctx.moveTo(0,h*.68);ctx.quadraticCurveTo(w*.12,h*.75,w*.22,h*.63);
-    ctx.quadraticCurveTo(w*.55,h*.58,w*.81,h*.64);
-    ctx.quadraticCurveTo(w*.93,h*.71,w,h*.67);
+    ctx.moveTo(0,h*.79);ctx.quadraticCurveTo(w*.15,h*.84,w*.26,h*.64);
+    ctx.quadraticCurveTo(w*.55,h*.58,w*.77,h*.65);
+    ctx.quadraticCurveTo(w*.90,h*.78,w,h*.77);
     ctx.lineTo(w,h);ctx.lineTo(0,h);ctx.closePath();ctx.fill();
     ctx.fillStyle='#364746';
-    ctx.beginPath();ctx.moveTo(0,h*.76);ctx.lineTo(w*.205,h*.64);
-    ctx.lineTo(w*.205,h*.71);ctx.lineTo(0,h*.90);ctx.closePath();ctx.fill();
-    ctx.beginPath();ctx.moveTo(w,h*.78);ctx.lineTo(w*.80,h*.65);
-    ctx.lineTo(w*.81,h*.71);ctx.lineTo(w,h*.91);ctx.closePath();ctx.fill();
+    ctx.beginPath();ctx.moveTo(0,h*.84);ctx.lineTo(w*.245,h*.69);
+    ctx.lineTo(w*.245,h*.75);ctx.lineTo(0,h*.96);ctx.closePath();ctx.fill();
+    ctx.beginPath();ctx.moveTo(w,h*.83);ctx.lineTo(w*.765,h*.69);
+    ctx.lineTo(w*.78,h*.75);ctx.lineTo(w,h*.96);ctx.closePath();ctx.fill();
     ctx.fillStyle='#172323';
     ctx.beginPath();ctx.moveTo(0,0);ctx.lineTo(w,0);ctx.lineTo(w,h*.12);
     ctx.quadraticCurveTo(w*.61,-h*.045,0,h*.12);ctx.closePath();ctx.fill();
     ctx.fillStyle='#303f3e';
-    ctx.beginPath();ctx.moveTo(w*.095,0);ctx.lineTo(w*.164,0);
-    ctx.quadraticCurveTo(w*.158,h*.30,w*.275,h*.615);
-    ctx.lineTo(w*.226,h*.655);ctx.quadraticCurveTo(w*.14,h*.35,w*.095,0);ctx.fill();
-    ctx.beginPath();ctx.moveTo(w*.928,0);ctx.lineTo(w*.967,0);
-    ctx.quadraticCurveTo(w*.93,h*.31,w*.83,h*.68);
-    ctx.lineTo(w*.799,h*.646);ctx.quadraticCurveTo(w*.868,h*.34,w*.928,0);ctx.fill();
+    ctx.beginPath();ctx.moveTo(w*.125,0);ctx.lineTo(w*.194,0);
+    ctx.quadraticCurveTo(w*.186,h*.30,w*.304,h*.625);
+    ctx.lineTo(w*.255,h*.690);ctx.quadraticCurveTo(w*.168,h*.35,w*.125,0);ctx.fill();
+    ctx.beginPath();ctx.moveTo(w*.897,0);ctx.lineTo(w*.936,0);
+    ctx.quadraticCurveTo(w*.90,h*.31,w*.800,h*.715);
+    ctx.lineTo(w*.765,h*.660);ctx.quadraticCurveTo(w*.837,h*.34,w*.897,0);ctx.fill();
 
     ctx.fillStyle='#172323';
     ctx.beginPath();ctx.roundRect(w*.29,h*.645,w*.23,h*.13,10);ctx.fill();
