@@ -1,0 +1,333 @@
+<!doctype html>
+<html lang="vi">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sân tập lùi xe</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#10191a;color:#f1f7ee;font:16px system-ui,sans-serif}main{max-width:1130px;margin:auto;padding:26px 20px}header{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:18px}h1{font-size:clamp(26px,5vw,42px);letter-spacing:-.06em;margin:0}h2{font-size:17px;margin:0}nav,.actions,.telemetry{display:flex;gap:8px;flex-wrap:wrap}button{font:inherit;font-weight:650;color:inherit;background:#253435;border:1px solid #445659;border-radius:9px;padding:9px 13px;cursor:pointer;touch-action:none}button[aria-pressed=true]{background:#d6f77b;color:#152516;border-color:#d6f77b}button:focus-visible{outline:2px solid #f8c670;outline-offset:3px}.game{display:grid;grid-template-columns:minmax(0,1fr) 270px;gap:14px}.scene{position:relative;min-width:0;align-self:start;border-radius:15px;overflow:hidden;border:1px solid #3d5251;background:#293636}.scene.collision{border-color:#ff8e7b}.impact{position:absolute;top:12px;left:50%;transform:translateX(-50%);padding:8px 14px;border-radius:8px;background:#852d25;color:#fff;white-space:nowrap;font-weight:750;pointer-events:none}#status.collision{color:#ffab99}canvas{width:100%;display:block}.panel{display:grid;align-content:start;gap:12px}.card{background:#1b2728;border:1px solid #354747;border-radius:14px;padding:13px}.instrument{display:block;width:100%;height:104px;margin:5px 0}.telemetry{justify-content:space-between;color:#d6f77b;font-variant-numeric:tabular-nums}p{margin:8px 0 0;line-height:1.4}#status{min-height:45px;color:#d6f77b}.hint{color:#bbceca;font-size:14px}.keys{display:grid;grid-template-columns:1fr 1fr 1fr;gap:5px;margin-top:8px}.keys button{padding:7px 3px;min-height:42px;font-size:14px}.keys .wide{grid-column:1/-1}.keys .forward{grid-column:2;grid-row:1}.keys button[data-key=ArrowLeft]{grid-column:1;grid-row:2}.keys button[data-key=ArrowDown]{grid-column:2;grid-row:2}.keys button[data-key=ArrowRight]{grid-column:3;grid-row:2}.keys .held{background:#d6f77b;color:#152516}[hidden]{display:none!important}#zigzag-choices{margin-top:8px}.actions button{flex:1;font-size:14px}@media(max-width:800px){.game{grid-template-columns:1fr}.panel{grid-template-columns:1fr 1fr}.feedback{grid-column:1/-1}}@media(max-width:430px){main{padding:12px}.game,.panel{gap:7px}.card{padding:8px}.instrument{height:85px}}
+</style>
+<main>
+<header><h1>Sân tập lùi xe</h1><nav aria-label="Chọn bài tập"><button data-mode="parallel" aria-pressed="true">Ghép ngang</button><button data-mode="perpendicular" aria-pressed="false">Ghép dọc</button><button id="zigzag" aria-pressed="false">Hình chữ chi</button></nav></header>
+<div class="game">
+<div class="scene"><canvas id="map" width="760" height="620" aria-label="Sân tập nhìn từ trên xuống. Xe của bạn màu xanh sáng, ô đỗ có nét đứt."></canvas><div id="impact" class="impact" aria-hidden="true" hidden>Va chạm · Xe đã dừng</div></div>
+<aside class="panel">
+<section class="card"><h2>Vô lăng và bánh trước</h2>
+<svg class="instrument" viewBox="0 0 240 108" aria-hidden="true">
+<g id="wheel"><circle cx="56" cy="54" r="36" fill="#10191a" stroke="#d6f77b" stroke-width="7"/><path d="M21 51h70M56 54v34" stroke="#d6f77b" stroke-width="6"/><circle cx="56" cy="54" r="12" fill="#d6f77b"/><path d="M56 15v11" stroke="#fff" stroke-width="4"/></g>
+<path d="M146 81V40q0-16 16-16h33q16 0 16 16v41z" fill="#273d3e" stroke="#648583" stroke-width="2"/><path d="m171 48 8-9 8 9m-8-9v23" fill="none" stroke="#e5f5e9" stroke-width="3"/><path d="M142 42h74" stroke="#6a8a87" stroke-width="2"/>
+<rect id="tireL" x="134" y="26" width="13" height="32" rx="4" fill="#d6f77b"/><rect id="tireR" x="210" y="26" width="13" height="32" rx="4" fill="#d6f77b"/>
+<path d="M145 79v9m66-9v9" stroke="#819f9c" stroke-width="8" stroke-linecap="round"/></svg>
+<div class="telemetry"><span id="angle">Thẳng · 0°</span><span id="direction">Đang dừng</span></div></section>
+<section class="card"><h2>Điều khiển</h2><div class="keys">
+<button class="forward" data-key="ArrowUp" aria-label="Tiến">↑ / W</button><button data-key="ArrowLeft" aria-label="Đánh lái trái">← / A</button><button data-key="ArrowDown" aria-label="Lùi">↓ / S</button><button data-key="ArrowRight" aria-label="Đánh lái phải">→ / D</button><button class="wide" data-key="Space">Space · Phanh</button>
+</div><p class="hint">G để trả lái, Esc để tập lại. Góc lái được giữ khi bạn thả phím.</p></section>
+<section class="card feedback"><h2 id="lesson">Ghép ngang</h2><div id="zigzag-choices" class="actions" hidden aria-label="Chiều chạy"><button data-mode="zigzagForward" aria-pressed="false">Xuôi</button><button data-mode="zigzagReverse" aria-pressed="false">Ngược</button></div><p id="status" role="status"></p><p class="hint" id="tip"></p></section>
+<div class="actions"><button id="center">Trả lái</button><button id="reset">Tập lại</button><button id="guide" aria-pressed="false">Quỹ đạo</button></div>
+</aside></div></main>
+<script>
+'use strict';
+const byId = id => document.getElementById(id);
+const ctx = byId('map').getContext('2d');
+const W = 760, H = 620, carWidth = 56, carLength = 111, wheelbase = 73;
+const input = new Map();
+const keys = new Set();
+const buttons = [...document.querySelectorAll('[data-key]')];
+const slalom = {
+  lane:[[14,328],[155,328],[267.5,244],[380,328],[492.5,244],[605,328],[746,328]],
+  halfWidth:70,
+  road:[14,746,16,604], parked:[]
+};
+const lessons = {
+  zigzagForward: {...slalom, name:'Hình chữ chi', start:[79,328,Math.PI/2], finish:605,
+    tip:'Dùng W hoặc ↑ để chạy tiến từ trái sang phải, giữ cả xe giữa hai vạch gấp khúc.'},
+  zigzagReverse: {...slalom, name:'Hình chữ chi', start:[681,328,Math.PI/2], finish:155,
+    tip:'Dùng S hoặc ↓ để chạy lùi từ phải sang trái, giữ cả xe giữa hai vạch gấp khúc.'},
+  parallel: {name:'Ghép ngang', start:[516,162,0], goal:[608,328,0,87,180],
+    parked:[[608,162,0],[608,489,0]], road:[25,656,14,606],
+    tip:'Xe bắt đầu ngang xe đỗ phía trên. Khi lùi, đánh phải để đuôi vào ô rồi đánh trái để thân xe song song với lề.'},
+  perpendicular: {name:'Ghép dọc', start:[407,353,-Math.PI/2], goal:[442,499,0,100,160],
+    parked:[[327,499,0],[557,499,0]], road:[25,735,14,579],
+    tip:'Đưa xe sang trái ô đỗ. Đánh trái khi lùi để đuôi vào ô, rồi trả lái khi thân xe thẳng theo vạch.'}
+};
+const clamp = (n,min,max) => Math.max(min,Math.min(max,n));
+const parkingAngleLimit = Math.sin(4*Math.PI/180);
+let mode, lesson, car, steer, speed, won, showGuide = false, bumpUntil, impact;
+function reset(next = mode) {
+  mode=next;
+  lesson=lessons[mode];
+  const [x,y,a]=lesson.start;
+  car={x,y,a};
+  steer=speed=bumpUntil=0;
+  won=false;
+  impact='';
+  clearKeys();
+  byId('lesson').textContent=lesson.name;
+  byId('zigzag-choices').hidden=!lesson.lane;
+  byId('zigzag').setAttribute('aria-pressed',Boolean(lesson.lane));
+  byId('tip').textContent=lesson.tip;
+  document.querySelectorAll('[data-mode]').forEach(b=>b.setAttribute('aria-pressed', b.dataset.mode===mode));
+}
+function point({x,y,a},u,v) {
+  return [x+u*Math.cos(a)-v*Math.sin(a),y+u*Math.sin(a)+v*Math.cos(a)];
+}
+function corners(pose,w=carWidth,l=carLength) {
+  return [[-w/2,-l/2],[w/2,-l/2],[w/2,l/2],[-w/2,l/2]].map(([u,v])=>point(pose,u,v));
+}
+function overlaps(a,b) {
+  return [a,b].every(poly=>[0,1].every(i=>{
+    const axis=[poly[i+1][1]-poly[i][1],poly[i][0]-poly[i+1][0]];
+    const project=p=>p.map(([x,y])=>x*axis[0]+y*axis[1]);
+    const p=project(a), q=project(b);
+    return Math.max(...p)>Math.min(...q) && Math.max(...q)>Math.min(...p);
+  }));
+}
+function obstacleAt(pose) {
+  const box=corners(pose);
+  const [left,right,top,bottom]=lesson.road;
+  if(box.some(([x,y])=>x<left||x>right||y<top||y>bottom))
+    return 'Chạm lề hoặc giới hạn sân.';
+  if(lesson.parked.some(([x,y,a])=>overlaps(box,corners({x,y,a}))))
+    return 'Chạm xe đang đỗ.';
+  if(lesson.lane && crossesLane(box))return 'Chạm vạch biên hình chữ chi.';
+  return '';
+}
+function laneCenter(x){
+  const lane=lesson.lane;
+  const right=lane.findIndex(([px],i)=>i>0&&px>=x);
+  const [x0,y0]=lane[right-1], [x1,y1]=lane[right];
+  return y0+(x-x0)*(y1-y0)/(x1-x0);
+}
+function crossesLane(box){
+  const outside=(x,y)=>Math.abs(y-laneCenter(x))>=lesson.halfWidth-2;
+  if(box.some(([x,y])=>outside(x,y)))return true;
+  // At a bend, a body edge can cross the boundary with both corners inside.
+  return box.some(([x0,y0],i)=>{
+    const [x1,y1]=box[(i+1)%box.length];
+    return lesson.lane.some(([x])=>x>Math.min(x0,x1)&&x<Math.max(x0,x1)&&
+      outside(x,y0+(x-x0)*(y1-y0)/(x1-x0)));
+  });
+}
+function inBay() {
+  const [x,y,,w,l]=lesson.goal;
+  return corners(car).every(([px,py])=>Math.abs(px-x)<w/2-2 && Math.abs(py-y)<l/2-2);
+}
+function advance(pose,distance) {
+  const a=pose.a+distance*Math.tan(steer)/wheelbase;
+  const rear=point(pose,0,wheelbase/2);
+  const mid=(a+pose.a)/2;
+  return {x:rear[0]+distance*Math.sin(mid)+wheelbase/2*Math.sin(a),
+          y:rear[1]-distance*Math.cos(mid)-wheelbase/2*Math.cos(a),a};
+}
+function rect(x,y,w,h,r,fill,stroke) {
+  ctx.beginPath();ctx.roundRect(x,y,w,h,r);
+  if(fill){ctx.fillStyle=fill;ctx.fill();}
+  if(stroke){ctx.strokeStyle=stroke;ctx.stroke();}
+}
+function line(x,y,X,Y,color,width=1) {
+  ctx.beginPath();ctx.moveTo(x,y);ctx.lineTo(X,Y);ctx.strokeStyle=color;ctx.lineWidth=width;ctx.stroke();ctx.lineWidth=1;
+}
+function label(s,x,y,color,size=14) {
+  ctx.fillStyle=color;ctx.font='700 '+size+'px system-ui';ctx.textAlign='center';ctx.fillText(s,x,y);
+}
+function vehicle(pose,player,color,index) {
+  ctx.save();ctx.translate(pose.x,pose.y);ctx.rotate(pose.a);
+  rect(-29,-55,63,115,16,'#0b151780');
+  for(const x of [-26,26])for(const y of [-36,36]){
+    ctx.save();ctx.translate(x,y);
+    if(player && y<0)ctx.rotate(steer);
+    rect(-6,-12,12,24,3,player&&y<0?'#d6f77b':'#121d20');
+    rect(-2,-9,4,18,2,player&&y<0?'#557735':'#344345');
+    ctx.restore();
+  }
+  rect(-24,-55,48,110,13,color,player?'#defbcc':'#b0b8b577');
+  rect(-20,-47,40,94,11,null,'#f9ffed59');
+  rect(-19,-32,38,19,[7,7,3,3],'#172b34');
+  line(-16,-29,16,-29,'#759d9c',2);
+  rect(-18,25,36,13,[3,3,6,6],'#172b34');
+  rect(-15,-10,30,32,6,player?'#a1d68b':'#ffffff30');
+  rect(-29,-19,8,6,2,'#b5c8c3');rect(21,-19,8,6,2,'#b5c8c3');
+  for(const x of [-19,11]){
+    rect(x,-50,8,5,2,'#fff1ba');
+    rect(x,46,8,5,2,player&&speed<0?'#fff6d4':'#f38175');
+  }
+  label(player?'↑':index+1,0,13,player?'#233d20':'#e6eee9',player?23:13);
+  ctx.restore();
+}
+let seed=35;
+function random(){seed=(1664525*seed+1013904223)>>>0; return seed/4294967296;}
+const specks=Array.from({length:4200},()=>[random()*W,random()*H,random()*2+0.4,random()>.5?'#aec4bc12':'#121c2036']);
+const asphalt=document.createElement('canvas');
+asphalt.width=W;asphalt.height=H;
+const texture=asphalt.getContext('2d');
+for(const [x,y,r,c] of specks){texture.fillStyle=c;texture.fillRect(x,y,r,r);}
+function tree(x,y,r){
+  ctx.beginPath();ctx.arc(x+5,y+7,r+1,0,Math.PI*2);ctx.fillStyle='#132c2680';ctx.fill();
+  for(const [dx,dy,scale,color] of [[0,0,1,'#2e5942'],[-5,-5,.72,'#407054'],[5,5,.48,'#4e805b']]){
+    ctx.beginPath();ctx.arc(x+dx,y+dy,r*scale,0,Math.PI*2);ctx.fillStyle=color;ctx.fill();
+  }
+}
+function drawSlalom(){
+  const forward=mode==='zigzagForward';
+  const start=forward?155:605;
+  const lane=lesson.lane;
+  const half=lesson.halfWidth;
+  rect(0,0,W,154,0,'#385745');
+  rect(0,423,W,H-423,0,'#385745');
+  for(const [x,y] of [[70,92],[250,58],[474,95],[684,63],[147,515],[365,550],[610,510]])tree(x,y,32);
+  ctx.beginPath();
+  lane.forEach(([x,y],i)=>i?ctx.lineTo(x,y-half):ctx.moveTo(x,y-half));
+  for(const [x,y] of [...lane].reverse())ctx.lineTo(x,y+half);
+  ctx.closePath();ctx.fillStyle='#59625f';ctx.fill();
+  for(const offset of [-half,half]){
+    for(let i=1;i<lane.length;i++){
+      const [x0,y0]=lane[i-1], [x1,y1]=lane[i];
+      line(x0,y0+offset,x1,y1+offset,'#ff9a5d',4);
+    }
+  }
+  ctx.setLineDash([7,6]);
+  line(start,328-half,start,328+half,'#e4eee8',2);
+  line(lesson.finish,328-half,lesson.finish,328+half,'#d6f77b',2);
+  ctx.setLineDash([]);
+  label('XUẤT PHÁT',start,328+half+21,'#dae8df',14);
+  label('ĐÍCH',lesson.finish,328+half+21,'#d6f77b',15);
+}
+function draw() {
+  rect(0,0,W,H,0,'#303e41');
+  ctx.drawImage(asphalt,0,0);
+  const parallel=mode==='parallel';
+  if(lesson.lane){
+    drawSlalom();
+  }else if(parallel){
+    rect(657,0,103,H,0,'#63706a');
+    for(let y=0;y<H;y+=41)line(659,y,760,y,'#4b5b55');
+    line(656,0,656,H,'#b6beb1',5);
+    line(164,0,164,H,'#d9ae57',3);line(173,0,173,H,'#d9ae57',3);
+    for(const y of [55,220,390,555]){rect(699,y-30,61,60,8,'#3a5345');tree(732,y,23);}
+    for(const y of [221,432])line(559,y,654,y,'#cfd9cd',3);
+  }else{
+    rect(0,581,W,39,0,'#64736a');
+    line(0,580,W,580,'#b6beb1',5);
+    for(let x=25;x<W;x+=62){line(x,582,x,620,'#465950');if(x%3===1)tree(x,607,14);}
+    for(const x of [269,384,499,614])line(x,417,x,577,'#cfd9cd',3);
+    ctx.setLineDash([24,18]);line(0,220,W,220,'#e1b865',2);ctx.setLineDash([]);
+  }
+  if(lesson.goal){
+    const [x,y,,w,l]=lesson.goal;
+    ctx.setLineDash([8,6]);ctx.lineWidth=2;
+    rect(x-w/2,y-l/2,w,l,7,won?'#a7ea5870':'#a4d54432','#d6f77b');
+    ctx.setLineDash([]);ctx.lineWidth=1;
+    label('Ô ĐỖ',x,y+5,'#e0f8ac',16);
+  }
+  lesson.parked.forEach(([x,y,a],i)=>vehicle({x,y,a},false,['#798d9b','#b4775d'][i],i));
+  if(showGuide&&(!won||lesson.goal)){
+    let ghost=car;
+    const travel=keys.has('ArrowUp')&&!keys.has('ArrowDown')?1:
+      keys.has('ArrowDown')?-1:Math.sign(speed)||-1;
+    for(let i=0;i<13;i++){
+      ghost=advance(ghost,travel*9);
+      const hit=obstacleAt(ghost);
+      for(const offset of [-26,0,26]){
+        const [px,py]=point(ghost,offset,-travel*wheelbase/2);
+        const radius=offset===0?2.8:2.1;
+        rect(px-radius,py-radius,2*radius,2*radius,radius,
+          hit?'#ff987f':offset===0?'#d6f77b':'#a2dfef');
+      }
+      if(hit)break;
+    }
+  }
+  vehicle(car,true,'#62b647');
+}
+function setStatus(message){
+  if(byId('status').textContent!==message)byId('status').textContent=message;
+}
+function reachedFinish(distance){
+  if(!lesson.lane)return false;
+  const forward=mode==='zigzagForward';
+  return corners(car).every(([x])=>forward?x>=lesson.finish:x<=lesson.finish)
+    && (forward?distance>0:distance<0);
+}
+function update(dt,now) {
+  if(!won||lesson.goal){
+    const turn=Number(keys.has('ArrowRight'))-Number(keys.has('ArrowLeft'));
+    steer=clamp(steer+turn*dt*1.05,-.64,.64);
+    const moving=Number(keys.has('ArrowUp'))-Number(keys.has('ArrowDown'));
+    const target=keys.has('Space')?0:moving*(moving>0?70:50);
+    const step=(keys.has('Space')?520:target===0?210:100)*dt;
+    speed+=clamp(target-speed,-step,step);
+    const candidate=advance(car,speed*dt);
+    const obstacle=speed ? obstacleAt(candidate) : '';
+    if(obstacle){
+      speed=0;
+      impact=obstacle;
+      bumpUntil=now+2000;
+    }else car=candidate;
+    if(reachedFinish(speed)){
+      won=true;
+      speed=0;
+    }
+  }
+  const degrees=Math.round(steer*180/Math.PI);
+  byId('wheel').setAttribute('transform','rotate('+steer*360/Math.PI+' 56 54)');
+  byId('tireL').setAttribute('transform','rotate('+degrees+' 140.5 42)');
+  byId('tireR').setAttribute('transform','rotate('+degrees+' 216.5 42)');
+  byId('angle').textContent=(degrees<0?'Trái':degrees>0?'Phải':'Thẳng')+' · '+Math.abs(degrees)+'°';
+  byId('direction').textContent=speed<0?'Đang lùi':speed>0?'Đang tiến':'Đang dừng';
+  const inside=lesson.goal && inBay();
+  const aligned=inside && Math.abs(Math.sin(car.a-lesson.goal[2]))<=parkingAngleLimit;
+  const collision=now<bumpUntil && (!won||lesson.goal);
+  if(lesson.goal)won=Boolean(aligned && !speed && !collision);
+  byId('impact').hidden=!collision;
+  byId('map').parentElement.classList.toggle('collision',collision);
+  byId('status').classList.toggle('collision',collision);
+  if(collision)setStatus('Va chạm! '+impact+' Đổi hướng để chỉnh lại.');
+  else if(lesson.lane)setStatus(won?'Đã qua vạch đích!':'Giữ xe giữa hai vạch biên đến vạch đích.');
+  else if(won)setStatus('Đỗ thành công! Bạn có thể chỉnh xe hoặc lái ra.');
+  else if(aligned)setStatus('Xe đã thẳng trong ô. Hãy dừng hẳn.');
+  else if(inside)setStatus('Xe đã nằm trong ô. Chỉnh thân xe song song với vạch (lệch tối đa 4°).');
+  else setStatus('Đưa cả xe vào ô, chỉnh thân xe song song với vạch rồi dừng hẳn.');
+}
+function key(code,pressed,source){
+  if(pressed)input.set(source,code);else input.delete(source);
+  keys.clear();
+  for(const active of input.values())keys.add(active);
+  buttons.forEach(b=>b.classList.toggle('held',keys.has(b.dataset.key)));
+}
+function clearKeys(){
+  input.clear();
+  keys.clear();
+  buttons.forEach(b=>b.classList.remove('held'));
+}
+const driveCodes=['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','Space'];
+const aliases={KeyW:'ArrowUp',KeyS:'ArrowDown',KeyA:'ArrowLeft',KeyD:'ArrowRight'};
+addEventListener('keydown',e=>{
+  if(e.ctrlKey||e.metaKey||e.altKey||e.shiftKey)return;
+  if(e.code==='Space'&&e.target instanceof HTMLButtonElement)return;
+  const code=aliases[e.code]||e.code;
+  if(driveCodes.includes(code)){e.preventDefault();key(code,true,e.code);}
+  if(e.code==='KeyG')steer=0;
+  if(e.code==='KeyR'||e.code==='Escape'){
+    e.preventDefault();
+    if(!e.repeat)reset();
+  }
+});
+addEventListener('keyup',e=>key(aliases[e.code]||e.code,false,e.code));
+addEventListener('blur',clearKeys);
+document.addEventListener('visibilitychange',()=>{if(document.hidden)clearKeys();});
+buttons.forEach(b=>{
+  b.addEventListener('pointerdown',e=>{e.preventDefault();b.setPointerCapture(e.pointerId);key(b.dataset.key,true,e.pointerId);});
+  ['pointerup','pointercancel','lostpointercapture'].forEach(event=>b.addEventListener(event,e=>key(b.dataset.key,false,e.pointerId)));
+  b.addEventListener('keydown',e=>{if(e.code==='Enter'||e.code==='Space'){e.preventDefault();e.stopPropagation();key(b.dataset.key,true,b);}});
+  b.addEventListener('keyup',e=>{if(e.code==='Enter'||e.code==='Space')key(b.dataset.key,false,b);});
+  b.addEventListener('blur',()=>key(b.dataset.key,false,b));
+});
+document.querySelectorAll('[data-mode]').forEach(b=>b.onclick=()=>{reset(b.dataset.mode);b.blur();});
+byId('zigzag').onclick=()=>{if(!lesson.lane)reset('zigzagForward');byId('zigzag').blur();};
+byId('reset').onclick=()=>{reset();byId('reset').blur();};
+byId('center').onclick=()=>{steer=0;byId('center').blur();};
+byId('guide').onclick=()=>{showGuide=!showGuide;byId('guide').setAttribute('aria-pressed',showGuide);byId('guide').blur();};
+reset('parallel');
+let previous=performance.now();
+function frame(now){update(Math.min((now-previous)/1000,.035),now);draw();previous=now;requestAnimationFrame(frame);}
+requestAnimationFrame(frame);
+</script>
+</html>
