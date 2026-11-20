@@ -1,7 +1,10 @@
 'use strict';
 
 function createCockpit(panel, point, corners) {
-  const views = [...panel.querySelectorAll('canvas')].map(canvas => canvas.getContext('2d'));
+  const views = [...panel.querySelectorAll('canvas:not([data-side-window])')]
+    .map(canvas => canvas.getContext('2d'));
+  const sideWindows = [...panel.querySelectorAll('canvas[data-side-window]')]
+    .map(canvas => canvas.getContext('2d'));
   const settings = [...panel.querySelectorAll('input[type=range]')];
   panel.querySelector('[data-reset-mirrors]').onclick = () => {
     settings.forEach(input => { input.value = input.defaultValue; });
@@ -170,7 +173,7 @@ function createCockpit(panel, point, corners) {
       ctx.fillStyle='#fff';ctx.fillText(sign.text,0,0);
       ctx.restore();
     }
-    if(!isMirror){
+    if(!isMirror&&!camera.sideWindow){
       ctx.fillStyle='#253435';
       ctx.beginPath();
       ctx.moveTo(0,h*.85);
@@ -182,10 +185,10 @@ function createCockpit(panel, point, corners) {
       for(const side of [0,1]){
         const edge=side*w, inward=side?-1:1;
         ctx.beginPath();
-        ctx.moveTo(edge,0);
-        ctx.lineTo(edge+inward*w*.031,0);
-        ctx.lineTo(edge+inward*w*.089,h*.83);
-        ctx.lineTo(edge+inward*w*.058,h*.83);
+        ctx.moveTo(edge+inward*w*.146,0);
+        ctx.lineTo(edge+inward*w*.169,0);
+        ctx.lineTo(edge+inward*w*.224,h*.83);
+        ctx.lineTo(edge+inward*w*.198,h*.83);
         ctx.closePath();ctx.fill();
       }
     }
@@ -203,6 +206,9 @@ function createCockpit(panel, point, corners) {
     render(views[0],{x,y,a:car.a,z:34,pitch:.03},ground,parked,signs,signal);
     const withFlank=[...parked,{pose:car,color:'#62b647',bodyWidth:48,bodyLength:107,roofColor:'#427f38',own:true}];
     for(const [i,side] of [-1,1].entries()){
+      const [sx,sy]=point(car,side*19,-10);
+      render(sideWindows[i],{x:sx,y:sy,a:car.a+side*Math.PI/2,z:33,pitch:.08,sideWindow:true},
+        ground,parked,signs,signal);
       const [mx,my]=point(car,side*32,-27);
       const yaw=Number(settings[i*2].value)*Math.PI/180;
       const pitch=Number(settings[i*2+1].value)*Math.PI/180;
