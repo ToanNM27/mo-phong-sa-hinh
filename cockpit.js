@@ -8,6 +8,7 @@ function createCockpit(panel, point, corners) {
   };
 
   function scene(lesson) {
+    if(lesson.course)return lesson.course.ground;
     const ground = [];
     const [left, right, top, bottom] = lesson.road;
     function plane(vertices, color) {
@@ -59,7 +60,7 @@ function createCockpit(panel, point, corners) {
     return ground;
   }
 
-  function render(ctx, camera, ground, objects) {
+  function render(ctx, camera, ground, objects, signs=[], signal) {
     const {width:w,height:h}=ctx.canvas;
     const isMirror=camera.mirror;
     const focal=w*(camera.convex ? .54 : isMirror ? .6 : .63);
@@ -141,6 +142,34 @@ function createCockpit(panel, point, corners) {
       polygon(vertices,color);
       for(const handle of handles)polygon(handle,'#d5edcb');
     }
+    for(const sign of signs){
+      const dx=sign.x-camera.x, dy=sign.y-camera.y;
+      const forward=dx*sine-dy*cosine;
+      const down=camera.z-48;
+      const depth=forward*pitchCos+down*pitchSin;
+      if(depth<18)continue;
+      const lateral=(dx*cosine+dy*sine)*(isMirror?-1:1);
+      const sx=lateral*focal/depth;
+      const sy=(down*pitchCos-forward*pitchSin)*focal/depth;
+      const radial=camera.convex ? .48*Math.hypot(sx,sy)/(w/2):0;
+      const soften=radial>0?Math.atan(radial)/radial:1;
+      const x=w/2+sx*soften,y=centerY+sy*soften;
+      if(x<-50||x>w+50||y<-50||y>h+50)continue;
+      const size=Math.min(70,Math.max(7,20*focal/depth*soften));
+      const signWidth=Math.max(size,sign.text.length*size*.32);
+      ctx.fillStyle='#515a55';
+      ctx.fillRect(x-size*.045,y,size*.09,size*2);
+      ctx.fillStyle={info:'#215989',stop:'#922f27',warn:'#a36426',speed:'#922f27',
+        signal:{red:'#c83830',yellow:'#d79522',green:'#397f42'}[signal]}[sign.type];
+      ctx.fillRect(x-signWidth/2,y-size/2,signWidth,size);
+      if(size<11)continue;
+      ctx.save();
+      ctx.translate(x,y);
+      if(isMirror)ctx.scale(-1,1);
+      ctx.textAlign='center';ctx.textBaseline='middle';ctx.font='700 '+size*.47+'px system-ui';
+      ctx.fillStyle='#fff';ctx.fillText(sign.text,0,0);
+      ctx.restore();
+    }
     if(!isMirror){
       ctx.fillStyle='#253435';
       ctx.beginPath();
@@ -163,13 +192,15 @@ function createCockpit(panel, point, corners) {
   }
 
   let lastLesson, ground;
-  return function drawCockpit(car, lesson) {
+  return function drawCockpit(car, lesson, now=performance.now()) {
     if(lesson!==lastLesson){ground=scene(lesson);lastLesson=lesson;}
     const parked=lesson.parked.map(([x,y,a],i)=>({
       pose:{x,y,a},color:i?'#b4775d':'#798d9b',bodyWidth:52,bodyLength:106
     }));
+    const signs=lesson.course?.signs;
+    const signal=lesson.course?.light(now);
     const [x,y]=point(car,-9,-18);
-    render(views[0],{x,y,a:car.a,z:34,pitch:.03},ground,parked);
+    render(views[0],{x,y,a:car.a,z:34,pitch:.03},ground,parked,signs,signal);
     const withFlank=[...parked,{pose:car,color:'#62b647',bodyWidth:48,bodyLength:107,roofColor:'#427f38',own:true}];
     for(const [i,side] of [-1,1].entries()){
       const [mx,my]=point(car,side*32,-27);
@@ -179,7 +210,7 @@ function createCockpit(panel, point, corners) {
       const tire={pose:{x:tx,y:ty,a:car.a},color:'#182022',roofColor:'#303a39',
         bodyWidth:10,bodyLength:19,height:13};
       render(views[i+1],{x:mx,y:my,a:car.a+Math.PI-side*yaw,z:29,pitch,mirror:true,convex:side===1},
-        ground,[...withFlank,tire]);
+        ground,[...withFlank,tire],signs,signal);
     }
   };
 }

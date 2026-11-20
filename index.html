@@ -69,9 +69,17 @@
 @media (orientation:landscape) and (pointer:coarse) and (min-width:650px){
   .cockpit{width:min(100%,calc((100svh - 110px) * 19 / 11));margin-inline:auto}
 }
+
+#course-controls{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+#course-controls button{flex:1;min-height:44px;padding:5px 7px;font-size:14px}
+.course-warning{color:#ffd27c!important}
+@media(max-width:480px){
+  header nav{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}
+  #course-controls button{flex-basis:calc(50% - 6px)}
+}
 </style>
 <main>
-<header><h1>Mô phỏng sa hình</h1><nav aria-label="Chọn bài tập"><button data-mode="parallel" aria-pressed="true">Ghép ngang</button><button data-mode="perpendicular" aria-pressed="false">Ghép dọc</button><button id="zigzag" aria-pressed="false">Hình chữ chi</button></nav></header>
+<header><h1>Mô phỏng sa hình</h1><nav aria-label="Chọn bài tập"><button data-mode="parallel" aria-pressed="true">Ghép ngang</button><button data-mode="perpendicular" aria-pressed="false">Ghép dọc</button><button id="zigzag" aria-pressed="false">Hình chữ chi</button><button id="course-mode" data-mode="full" aria-pressed="false">Toàn sa hình</button></nav></header>
 <div class="game">
 <div class="scene"><canvas id="map" width="760" height="620" aria-label="Sân tập nhìn từ trên xuống. Xe của bạn màu xanh sáng, ô đỗ có nét đứt."></canvas><div id="cockpit" hidden>
 <div class="cockpit">
@@ -99,11 +107,14 @@
 <div class="telemetry"><span id="angle">Thẳng · 0°</span><span id="direction">Đang dừng</span></div></section>
 <section class="card controls"><h2>Điều khiển</h2><div class="keys">
 <button class="forward" data-key="ArrowUp" aria-label="Tiến"><span class="touch-label" aria-hidden="true">↑<span>Tiến</span></span><span class="keyboard-label">↑ / W</span></button><button data-key="ArrowLeft" aria-label="Đánh lái trái"><span class="touch-label" aria-hidden="true">←<span>Trái</span></span><span class="keyboard-label">← / A</span></button><button data-key="ArrowDown" aria-label="Lùi"><span class="touch-label" aria-hidden="true">↓<span>Lùi</span></span><span class="keyboard-label">↓ / S</span></button><button data-key="ArrowRight" aria-label="Đánh lái phải"><span class="touch-label" aria-hidden="true">→<span>Phải</span></span><span class="keyboard-label">→ / D</span></button><button class="wide" data-key="Space" aria-label="Phanh"><span class="touch-label" aria-hidden="true">Thắng</span><span class="keyboard-label">Space · Phanh</span></button>
+</div><div id="course-controls" hidden aria-label="Điều khiển toàn sa hình">
+<button data-course-control="belt" title="Phím B" aria-pressed="false">Dây an toàn</button><button data-course-control="left" title="Phím Q" aria-pressed="false">Xi-nhan trái</button><button data-course-control="right" title="Phím E" aria-pressed="false">Xi-nhan phải</button><button data-course-control="gear" title="Phím F">Số 1</button><button data-course-control="engine" title="Phím I" aria-pressed="true">Máy đang bật</button>
 </div><p class="hint keyboard-label">G để trả lái, Esc để tập lại. Góc lái được giữ khi bạn thả phím.</p><p class="hint touch-label">Giữ đồng thời nút di chuyển và nút đánh lái để vào cua.</p></section>
 <section class="card feedback"><h2 id="lesson">Ghép ngang</h2><div id="zigzag-choices" class="actions" hidden aria-label="Chiều chạy"><button data-mode="zigzagForward" aria-pressed="false">Xuôi</button><button data-mode="zigzagReverse" aria-pressed="false">Ngược</button></div><p id="status" role="status"></p><p class="hint" id="tip"></p></section>
 <div class="actions"><button id="center">Trả lái</button><button id="reset">Tập lại</button><button id="guide" aria-pressed="false">Quỹ đạo</button><button id="alignment" aria-pressed="false">Canh thân xe</button><button id="cockpit-toggle" aria-pressed="false">Buồng lái</button><button id="placement" aria-pressed="false">Dời / xoay xe</button></div>
 </aside></div></main>
-<script src="./cockpit.js?v=4"></script>
+<script src="./course.js?v=1"></script>
+<script src="./cockpit.js?v=5"></script>
 <script>
 'use strict';
 const byId = id => document.getElementById(id);
@@ -132,6 +143,11 @@ const lessons = {
     pocket:[392,492,425], parked:[], road:[69,736,150,585],
     tip:'Tiến chếch ra khỏi lề dưới rồi đi qua miệng chuồng về bên trái. Đánh trái khi lùi để đưa đuôi vào chuồng, rồi trả lái theo vạch giữa.'}
 };
+const full=typeof createFullCourse==='function'?createFullCourse({point,corners,line,rect,label}):null;
+if(full)lessons.full={name:'Toàn sa hình',course:full,start:full.start,road:full.road,parked:full.parked,
+  tip:'Theo biển báo và chỉ dẫn của bài đang chạy. B bật dây an toàn, Q/E bật xi-nhan, F đổi số, I bật/tắt máy.'};
+byId('course-mode').hidden=!full;
+const courseButtons=[...document.querySelectorAll('[data-course-control]')];
 const clamp = (n,min,max) => Math.max(min,Math.min(max,n));
 const parkingAngleLimit = Math.sin(4*Math.PI/180);
 let placing=false, placementDrag=null, placementBlocked=false;
@@ -139,6 +155,11 @@ let mode, lesson, car, steer, speed, won, showGuide = false, showAlignment = fal
 function reset(next = mode) {
   mode=next;
   lesson=lessons[mode];
+  byId('course-controls').hidden=!lesson.course;
+  if(lesson.course){
+    lesson.course.reset(performance.now());
+    refreshCourseControls();
+  }
   const mapWidth=mode==='parallel'?W-parallelLeft:W;
   if(byId('map').width!==mapWidth)byId('map').width=mapWidth;
   const [x,y,a]=lesson.start;
@@ -168,6 +189,10 @@ function overlaps(a,b) {
   }));
 }
 function obstacleAt(pose) {
+  if(lesson.course){
+    const hit=lesson.course.obstacle(pose);
+    if(hit)return hit;
+  }
   const box=corners(pose);
   const [left,right,top,bottom]=lesson.road;
   if(box.some(([x,y])=>x<left||x>right||y<top||y>bottom))
@@ -294,10 +319,23 @@ function drawSlalom(){
   label('XUẤT PHÁT',start,328+half+21,'#dae8df',14);
   label('ĐÍCH',lesson.finish,328+half+21,'#d6f77b',15);
 }
-function draw() {
+function courseScale(){return Math.min(W/full.width,H/full.height);}
+function draw(now=performance.now()) {
   ctx.save();
   const parallel=mode==='parallel';
   if(parallel)ctx.translate(-parallelLeft,0);
+  if(lesson.course){
+    const scale=courseScale();
+    rect(0,0,W,H,0,'#355a42');
+    ctx.translate((W-full.width*scale)/2,(H-full.height*scale)/2);
+    ctx.scale(scale,scale);
+    full.draw(ctx,now);
+  }else drawPracticeMap(parallel);
+  if(lesson.goal)drawBay();
+  drawDrivingOverlays();
+  ctx.restore();
+}
+function drawPracticeMap(parallel){
   rect(0,0,W,H,0,'#303e41');
   ctx.drawImage(asphalt,0,0);
   if(lesson.lane){
@@ -340,7 +378,8 @@ function draw() {
     line(442,mouth,442,bottom-12,'#ffcf73',2);
     line(openingLeft+7,bottom-16,openingRight-7,bottom-16,'#ffcf73',2);
   }
-  if(lesson.goal){
+}
+function drawBay(){
     const [x,y,,w,l]=lesson.goal;
     ctx.setLineDash([8,6]);ctx.lineWidth=2;
     rect(x-w/2,y-l/2,w,l,7,won?'#a7ea5870':'#a4d54432','#d6f77b');
@@ -348,7 +387,8 @@ function draw() {
     label('Ô ĐỖ',x,y+5,'#e0f8ac',16);
     const guideX=lesson.pocket?lesson.pocket[0]+6:x-w/2-7;
     line(guideX,y-l/2,guideX,y+l/2,'#ffcf73',2);
-  }
+}
+function drawDrivingOverlays(){
   lesson.parked.forEach(([x,y,a],i)=>vehicle({x,y,a},false,['#798d9b','#b4775d'][i],i));
   if(showGuide&&!placing&&(!won||lesson.goal)){
     let ghost=car;
@@ -382,7 +422,6 @@ function draw() {
     rect(x-17,y-17,34,34,17,'#263939',color);
     label('↻',x,y+6,color,21);
   }
-  ctx.restore();
 }
 function setStatus(message){
   if(byId('status').textContent!==message)byId('status').textContent=message;
@@ -398,7 +437,10 @@ function update(dt,now) {
     const turn=Number(keys.has('ArrowRight'))-Number(keys.has('ArrowLeft'));
     steer=clamp(steer+turn*dt*1.05,-.64,.64);
     const moving=Number(keys.has('ArrowUp'))-Number(keys.has('ArrowDown'));
-    const target=keys.has('Space')?0:moving*(moving>0?70:50);
+    const course=lesson.course;
+    const limit=course?course.forwardSpeed():70;
+    const idle=course?course.idleSpeed(car):0;
+    const target=keys.has('Space')?0:moving===0||(course&&!course.controls().engine)?idle:moving*(moving>0?limit:50);
     const step=(keys.has('Space')?520:target===0?210:100)*dt;
     speed+=clamp(target-speed,-step,step);
     const candidate=advance(car,speed*dt);
@@ -408,17 +450,18 @@ function update(dt,now) {
       impact=obstacle;
       bumpUntil=now+2000;
     }else car=candidate;
-    if(reachedFinish(speed)){
+    if(reachedFinish(speed)||course?.update(car,speed,now,moving)){
       won=true;
       speed=0;
     }
   }
+  if(lesson.course)refreshCourseControls();
   const degrees=Math.round(steer*180/Math.PI);
   byId('wheel').setAttribute('transform','rotate('+steer*360/Math.PI+' 56 54)');
   byId('tireL').setAttribute('transform','rotate('+degrees+' 140.5 42)');
   byId('tireR').setAttribute('transform','rotate('+degrees+' 216.5 42)');
   byId('angle').textContent=(degrees<0?'Trái':degrees>0?'Phải':'Thẳng')+' · '+Math.abs(degrees)+'°';
-  byId('direction').textContent=speed<0?'Đang lùi':speed>0?'Đang tiến':'Đang dừng';
+  byId('direction').textContent=lesson.course?Math.round(Math.abs(speed)*.35)+' km/h':speed<0?'Đang lùi':speed>0?'Đang tiến':'Đang dừng';
   const inside=lesson.goal && inBay();
   const aligned=inside && Math.abs(Math.sin(car.a-lesson.goal[2]))<=parkingAngleLimit;
   const collision=now<bumpUntil && (!won||lesson.goal);
@@ -426,8 +469,12 @@ function update(dt,now) {
   byId('impact').hidden=!collision;
   byId('map').parentElement.classList.toggle('collision',collision);
   byId('status').classList.toggle('collision',collision);
+  const courseStatus=lesson.course?.status(now);
+  byId('status').classList.toggle('course-warning',Boolean(courseStatus?.warning&&!collision&&!placing));
+  if(courseStatus&&byId('lesson').textContent!==courseStatus.title)byId('lesson').textContent=courseStatus.title;
   if(placing)setStatus(placementBlocked?'Vị trí vướng vật cản. Thử dời hoặc xoay xe sang hướng khác.':'Kéo thân xe để dời, kéo nút ↻ để xoay. Bấm Xong để lái.');
   else if(collision)setStatus('Va chạm! '+impact+' Đổi hướng để chỉnh lại.');
+  else if(courseStatus)setStatus(courseStatus.message);
   else if(lesson.lane)setStatus(won?'Đã qua vạch đích!':'Giữ xe giữa hai vạch biên đến vạch đích.');
   else if(won)setStatus('Đỗ thành công! Bạn có thể chỉnh xe hoặc lái ra.');
   else if(aligned)setStatus('Xe đã thẳng trong ô. Hãy dừng hẳn.');
@@ -462,7 +509,7 @@ function rotationHandle(){
   const front=point(car,0,-carLength/2-24);
   const left=mode==='parallel'?parallelLeft:0;
   const distance=carLength/2+24;
-  return front[0]>=left+19&&front[0]<=W-19&&front[1]>=19&&front[1]<=H-19
+  return front[0]>=left+19&&front[0]<=(lesson.course?.width??W)-19&&front[1]>=19&&front[1]<=(lesson.course?.height??H)-19
     ?front:point(car,0,distance);
 }
 function mapPoint(event){
@@ -470,11 +517,13 @@ function mapPoint(event){
   const scale=Math.min(rect.width/map.width,rect.height/map.height);
   const left=rect.left+(rect.width-map.width*scale)/2;
   const top=rect.top+(rect.height-map.height*scale)/2;
-  return {
-    x:(event.clientX-left)/scale+(mode==='parallel'?parallelLeft:0),
-    y:(event.clientY-top)/scale,
-    scale
-  };
+  const x=(event.clientX-left)/scale;
+  const y=(event.clientY-top)/scale;
+  if(lesson.course){
+    const zoom=courseScale();
+    return {x:(x-(W-full.width*zoom)/2)/zoom,y:(y-(H-full.height*zoom)/2)/zoom,scale:scale*zoom};
+  }
+  return {x:x+(mode==='parallel'?parallelLeft:0),y,scale};
 }
 map.addEventListener('pointerdown',event=>{
   if(!placing||placementDrag||event.button!==0)return;
@@ -505,11 +554,35 @@ for(const event of ['pointerup','pointercancel','lostpointercapture']){
     if(placementDrag?.id===e.pointerId)placementDrag=null;
   });
 }
+function refreshCourseControls(){
+  const {gear,belt,signal,engine}=full.controls();
+  for(const button of courseButtons){
+    const control=button.dataset.courseControl;
+    if(control==='gear'||control==='engine'){
+      const text=control==='gear'?'Số '+gear:engine?'Máy đang bật':'Máy đang tắt';
+      if(button.textContent!==text)button.textContent=text;
+    }
+    if(control!=='gear'){
+      const pressed=String(control==='belt'?belt:control==='engine'?engine:signal===control);
+      if(button.getAttribute('aria-pressed')!==pressed)button.setAttribute('aria-pressed',pressed);
+    }
+  }
+}
+function applyCourseControl(control){
+  full.toggle(control);
+  refreshCourseControls();
+}
+for(const button of courseButtons)button.onclick=()=>{
+  applyCourseControl(button.dataset.courseControl);
+  button.blur();
+};
+const courseKeys={KeyB:'belt',KeyQ:'left',KeyE:'right',KeyF:'gear',KeyI:'engine'};
 const driveCodes=['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','Space'];
 const aliases={KeyW:'ArrowUp',KeyS:'ArrowDown',KeyA:'ArrowLeft',KeyD:'ArrowRight'};
 addEventListener('keydown',e=>{
   if(e.ctrlKey||e.metaKey||e.altKey||e.shiftKey)return;
   if(e.target instanceof HTMLInputElement)return;
+  if(lesson.course&&courseKeys[e.code]&&!e.repeat){e.preventDefault();applyCourseControl(courseKeys[e.code]);}
   if(e.code==='Space'&&e.target instanceof HTMLButtonElement)return;
   const code=aliases[e.code]||e.code;
   if(driveCodes.includes(code)){e.preventDefault();key(code,true,e.code);}
@@ -558,7 +631,7 @@ byId('cockpit-toggle').onclick=()=>{
 byId('placement').onclick=()=>{setPlacement(!placing);byId('placement').blur();};
 reset('parallel');
 let previous=performance.now();
-function frame(now){update(Math.min((now-previous)/1000,.035),now);if(cockpitEnabled)drawCockpit(car,lesson);else draw();previous=now;requestAnimationFrame(frame);}
+function frame(now){update(Math.min((now-previous)/1000,.035),now);if(cockpitEnabled)drawCockpit(car,lesson,now);else draw(now);previous=now;requestAnimationFrame(frame);}
 requestAnimationFrame(frame);
 </script>
 </html>
