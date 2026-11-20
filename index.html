@@ -53,23 +53,21 @@
   .panel .instrument{height:56px}
 }
 
-.cockpit{position:relative;overflow:hidden;background:#263637}
-.cockpit .windshield{width:100%;aspect-ratio:19/11;max-height:44svh;object-fit:contain}
-.cockpit-mirrors{position:absolute;left:3%;right:3%;bottom:5%;display:flex;justify-content:space-between;pointer-events:none}
-.cockpit-mirrors figure{margin:0;width:31%;max-width:230px}
-.cockpit-mirrors figure:last-child{width:27%;max-width:200px}
-.cockpit-mirrors figure:last-child canvas{border-radius:16px 9px 12px 15px}
-.cockpit-mirrors canvas{border:3px solid #162323;border-radius:12px;background:#527b58}
-.cockpit-mirrors figcaption{width:max-content;margin:3px auto 0;background:#162323;color:#eef7ef;padding:2px 7px;border-radius:4px;font-size:clamp(11px,2vw,14px)}
-.mirror-settings{padding:8px 12px;background:#233333}
-.mirror-settings summary{cursor:pointer;padding:5px 0;font-weight:650}
+.cockpit{position:relative;overflow:hidden;background:#253435;aspect-ratio:19/11}
+.scene .cockpit .windshield{width:100%;height:100%;max-height:none}
+.cockpit-mirrors{position:absolute;inset:auto 3% 5%;display:flex;align-items:end;justify-content:space-between;pointer-events:none}
+.cockpit-mirrors figure{margin:0;width:30.5%}
+.scene .cockpit-mirrors canvas{width:100%;height:auto;max-height:none;border:2px solid #152121;border-radius:9px;background:#527b58}
+.cockpit-mirrors figcaption{width:max-content;margin:3px auto 0;background:#162323;color:#eef7ef;padding:2px 6px;border-radius:3px;font-size:clamp(11px,1.4vw,14px);line-height:1.15}
+.mirror-settings{padding:7px 10px;background:#213030}
+.mirror-settings summary{cursor:pointer;padding:4px 0;font-weight:650}
 .mirror-settings-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
 .mirror-settings fieldset{min-width:0;margin:0;padding:6px 8px;border:1px solid #657772;border-radius:7px}
 .mirror-settings label{display:block;font-size:13px}
 .mirror-settings input{width:100%;margin:4px 0;accent-color:#d6f77b}
 .mirror-settings button{margin-top:8px}
 @media (orientation:landscape) and (pointer:coarse) and (min-width:650px){
-  .cockpit .windshield{max-height:calc(100svh - 110px)}
+  .cockpit{width:min(100%,calc((100svh - 110px) * 19 / 11));margin-inline:auto}
 }
 </style>
 <main>
@@ -105,7 +103,7 @@
 <section class="card feedback"><h2 id="lesson">Ghép ngang</h2><div id="zigzag-choices" class="actions" hidden aria-label="Chiều chạy"><button data-mode="zigzagForward" aria-pressed="false">Xuôi</button><button data-mode="zigzagReverse" aria-pressed="false">Ngược</button></div><p id="status" role="status"></p><p class="hint" id="tip"></p></section>
 <div class="actions"><button id="center">Trả lái</button><button id="reset">Tập lại</button><button id="guide" aria-pressed="false">Quỹ đạo</button><button id="alignment" aria-pressed="false">Canh thân xe</button><button id="cockpit-toggle" aria-pressed="false">Buồng lái</button><button id="placement" aria-pressed="false">Dời / xoay xe</button></div>
 </aside></div></main>
-<script src="./cockpit.js?v=3"></script>
+<script src="./cockpit.js?v=4"></script>
 <script>
 'use strict';
 const byId = id => document.getElementById(id);

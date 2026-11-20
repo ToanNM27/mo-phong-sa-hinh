@@ -142,18 +142,23 @@ function createCockpit(panel, point, corners) {
       for(const handle of handles)polygon(handle,'#d5edcb');
     }
     if(!isMirror){
-      ctx.fillStyle='#273637';
+      ctx.fillStyle='#253435';
       ctx.beginPath();
-      ctx.moveTo(0,h*.85); ctx.quadraticCurveTo(w*.49,h*.72,w,h*.85);
+      ctx.moveTo(0,h*.85);
+      ctx.quadraticCurveTo(w*.5,h*.72,w,h*.85);
       ctx.lineTo(w,h); ctx.lineTo(0,h); ctx.closePath(); ctx.fill();
       ctx.fillStyle='#172323';
       ctx.fillRect(0,0,w,h*.055);
-      ctx.strokeStyle='#243333';
-      ctx.lineWidth=w*.033;
-      ctx.beginPath();
-      ctx.moveTo(w*.015,0);ctx.lineTo(w*.085,h*.89);
-      ctx.moveTo(w*.985,0);ctx.lineTo(w*.915,h*.89);
-      ctx.stroke();
+      ctx.fillStyle='#243333';
+      for(const side of [0,1]){
+        const edge=side*w, inward=side?-1:1;
+        ctx.beginPath();
+        ctx.moveTo(edge,0);
+        ctx.lineTo(edge+inward*w*.031,0);
+        ctx.lineTo(edge+inward*w*.089,h*.83);
+        ctx.lineTo(edge+inward*w*.058,h*.83);
+        ctx.closePath();ctx.fill();
+      }
     }
   }
 
