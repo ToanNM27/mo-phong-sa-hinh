@@ -89,10 +89,34 @@
 .parking-flow h2{color:#d6f77b}
 .parking-flow p{margin-top:4px}
 .parking-flow strong{color:#fff4c1}
+
+@media(max-width:800px),(pointer:coarse){
+  header nav{display:grid;grid-template-columns:repeat(3,minmax(0,1fr))}
+  header nav button,.game-actions button,.mirror-settings button{touch-action:manipulation}
+  .panel{min-width:0}
+  .panel .game-actions{
+    display:grid;
+    grid-template-columns:repeat(2,minmax(0,1fr));
+    grid-column:1/-1;
+    grid-row:2;
+  }
+  .game-actions button{min-width:0;min-height:44px;padding:7px 5px;overflow-wrap:anywhere}
+  #cockpit-toggle{order:-1}
+  .cockpit-mirrors figcaption{
+    width:1px;height:1px;padding:0;overflow:hidden;clip-path:inset(50%);white-space:nowrap;
+  }
+  .panel .mirror-settings{grid-column:1/-1;border-radius:12px;border:1px solid #354747}
+  .mirror-settings summary{min-height:44px;padding:12px 3px}
+  .mirror-settings button{min-height:44px}
+  .cockpit-active .impact{
+    position:static;transform:none;text-align:center;white-space:normal;
+    border-radius:0;padding:6px 10px;font-size:14px;
+  }
+}
 </style>
 <main>
 <header><h1>Mô phỏng sa hình</h1><nav aria-label="Chọn bài tập"><button data-mode="parallel" aria-pressed="true">Ghép ngang</button><button data-mode="perpendicular" aria-pressed="false">Ghép dọc</button><button id="zigzag" aria-pressed="false">Hình chữ chi</button></nav></header>
-<div class="game">
+<div class="game" id="game">
 <div class="scene"><canvas id="map" width="760" height="620" aria-label="Sân tập nhìn từ trên xuống. Xe của bạn màu xanh sáng, ô đỗ có nét đứt."></canvas><div id="cockpit" hidden>
 <div class="cockpit">
 <canvas class="windshield" width="760" height="440" aria-label="Góc nhìn từ ghế lái qua kính trước và hai cửa sổ hông"></canvas>
@@ -100,7 +124,7 @@
 <figure><canvas width="320" height="172" aria-label="Hình phản chiếu bên trái"></canvas><figcaption>Gương trái</figcaption></figure>
 <figure><canvas width="270" height="172" aria-label="Hình phản chiếu bên phải"></canvas><figcaption>Gương phải</figcaption></figure>
 </div></div>
-<details class="mirror-settings">
+<details class="mirror-settings" id="mirror-settings">
 <summary>Chỉnh gương</summary>
 <div class="mirror-settings-grid">
 <fieldset><legend>Gương trái</legend><label>Trong ↔ Ngoài<input type="range" min="-8" max="42" value="11"></label><label>Lên ↔ Xuống<input type="range" min="-15" max="30" value="9"></label></fieldset>
@@ -109,7 +133,7 @@
 <button type="button" data-reset-mirrors>Đặt lại gương</button>
 </details></div>
 <div id="impact" class="impact" aria-hidden="true" hidden>Va chạm · Xe đã dừng</div></div>
-<aside class="panel">
+<aside class="panel" id="game-panel">
 <section class="card"><h2>Vô lăng và bánh trước</h2>
 <svg class="instrument" viewBox="0 0 240 108" aria-hidden="true">
 <g id="wheel"><circle cx="56" cy="54" r="36" fill="#10191a" stroke="#d6f77b" stroke-width="7"/><path d="M21 51h70M56 54v34" stroke="#d6f77b" stroke-width="6"/><circle cx="56" cy="54" r="12" fill="#d6f77b"/><path d="M56 15v11" stroke="#fff" stroke-width="4"/></g>
@@ -123,7 +147,7 @@
 <button data-course-control="belt" title="Phím B" aria-pressed="false">Dây an toàn</button><button data-course-control="left" title="Phím Q" aria-pressed="false">Xi-nhan trái</button><button data-course-control="right" title="Phím E" aria-pressed="false">Xi-nhan phải</button><button data-course-control="gear" title="Phím F">Số 1</button><button data-course-control="engine" title="Phím I" aria-pressed="true">Máy đang bật</button>
 </div><p class="hint keyboard-label">G để trả lái, Esc để tập lại. Góc lái được giữ khi bạn thả phím.</p><p class="hint touch-label">Giữ đồng thời nút di chuyển và nút đánh lái để vào cua.</p></section>
 <section class="card feedback"><h2 id="lesson">Ghép ngang</h2><div id="zigzag-choices" class="actions" hidden aria-label="Chiều chạy"><button data-mode="zigzagForward" aria-pressed="false">Xuôi</button><button data-mode="zigzagReverse" aria-pressed="false">Ngược</button></div><p id="status" role="status"></p><p class="hint" id="tip"></p></section>
-<div class="actions"><button id="center">Trả lái</button><button id="reset">Tập lại</button><button id="guide" aria-pressed="false">Quỹ đạo</button><button id="alignment" aria-pressed="false">Canh thân xe</button><button id="parking-flow-toggle" aria-pressed="false">Hướng dẫn từng bước</button><button id="cockpit-toggle" aria-pressed="false">Buồng lái</button><button id="placement" aria-pressed="false">Dời / xoay xe</button></div>
+<div class="actions game-actions" id="game-actions"><button id="center">Trả lái</button><button id="reset">Tập lại</button><button id="guide" aria-pressed="false">Quỹ đạo</button><button id="alignment" aria-pressed="false">Canh thân xe</button><button id="parking-flow-toggle" aria-pressed="false">Hướng dẫn từng bước</button><button id="cockpit-toggle" aria-pressed="false">Buồng lái</button><button id="placement" aria-pressed="false">Dời / xoay xe</button></div>
 <section id="placement-settings" class="card placement-settings" hidden><div class="placement-title"><h2>Góc thân xe</h2><output id="placement-angle">360°</output></div><p class="hint">360° hướng lên, góc tăng theo chiều kim đồng hồ.</p><div class="placement-presets"><button type="button" data-heading="45" aria-pressed="false">45°</button><button type="button" data-heading="90" aria-pressed="false">90°</button><button type="button" data-heading="180" aria-pressed="false">180°</button><button type="button" data-heading="225" aria-pressed="false">225°</button><button type="button" data-heading="270" aria-pressed="false">270°</button><button type="button" data-heading="315" aria-pressed="false">315°</button><button type="button" data-heading="360" aria-pressed="false">360°</button></div></section>
 <section class="card parking-flow" id="parking-flow" hidden aria-label="Hướng dẫn ghép xe">
 <h2 id="parking-flow-title"></h2>
@@ -767,9 +791,20 @@ byId('alignment').onclick=()=>{
 };
 const cockpitPanel=byId('cockpit');
 const drawCockpit=typeof createCockpit==='function'?createCockpit(cockpitPanel,point,corners):null;
+const mirrorSettings=byId('mirror-settings');
+const touchLayout=matchMedia('(max-width: 800px), (pointer: coarse)');
+function placeMirrorSettings(){
+  if(touchLayout.matches)byId('game-actions').after(mirrorSettings);
+  else cockpitPanel.append(mirrorSettings);
+  mirrorSettings.hidden=!cockpitEnabled;
+}
+touchLayout.addEventListener('change',placeMirrorSettings);
+placeMirrorSettings();
 function setCockpit(enabled){
   cockpitEnabled=enabled;
   cockpitPanel.hidden=!enabled;
+  mirrorSettings.hidden=!enabled;
+  byId('game').classList.toggle('cockpit-active',enabled);
   map.hidden=enabled;
   byId('cockpit-toggle').setAttribute('aria-pressed',enabled);
   for(const id of ['placement','guide','alignment'])byId(id).hidden=enabled;
