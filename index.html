@@ -45,9 +45,9 @@ const lessons = {
   parallel: {name:'Ghép ngang', start:[516,162,0], goal:[608,328,0,78,156],
     parked:[[608,162,0],[608,489,0]], road:[25,656,14,606],
     tip:'Xe bắt đầu ngang xe đỗ phía trên. Khi lùi, đánh phải để đuôi vào ô rồi đánh trái để thân xe song song với lề.'},
-  perpendicular: {name:'Ghép dọc', start:[407,353,-Math.PI/2], goal:[442,499,0,86,146],
-    parked:[[327,499,0],[557,499,0]], road:[25,735,14,579],
-    tip:'Đưa xe sang trái ô đỗ. Đánh trái khi lùi để đuôi vào ô, rồi trả lái khi thân xe thẳng theo vạch.'}
+  perpendicular: {name:'Ghép dọc', start:[407,323,-Math.PI/2], goal:[442,503,0,86,146],
+    pocket:[392,492,425], parked:[], road:[69,736,150,585],
+    tip:'Tiến qua miệng chuồng về bên trái. Đánh trái khi lùi để đưa đuôi vào chuồng, rồi trả lái theo vạch giữa.'}
 };
 const clamp = (n,min,max) => Math.max(min,Math.min(max,n));
 const parkingAngleLimit = Math.sin(4*Math.PI/180);
@@ -86,6 +86,14 @@ function obstacleAt(pose) {
   const [left,right,top,bottom]=lesson.road;
   if(box.some(([x,y])=>x<left||x>right||y<top||y>bottom))
     return 'Chạm lề hoặc giới hạn sân.';
+  if(lesson.pocket){
+    const [openingLeft,openingRight,mouth]=lesson.pocket;
+    const grassHeight=bottom-mouth;
+    const outside=[ [left,openingLeft], [openingRight,right] ];
+    if(outside.some(([x0,x1])=>overlaps(box,
+      corners({x:(x0+x1)/2,y:(mouth+bottom)/2,a:0},x1-x0,grassHeight))))
+      return 'Chạm mép chuồng ghép dọc.';
+  }
   if(lesson.parked.some(([x,y,a])=>overlaps(box,corners({x,y,a}))))
     return 'Chạm xe đang đỗ.';
   if(lesson.lane && crossesLane(box))return 'Chạm vạch biên hình chữ chi.';
@@ -215,11 +223,26 @@ function draw() {
     for(const y of [55,220,390,555]){rect(699,y-30,61,60,8,'#3a5345');tree(732,y,23);}
     for(const y of [221,432])line(559,y,654,y,'#cfd9cd',3);
   }else{
-    rect(0,581,W,39,0,'#64736a');
-    curb(0,580,W,580);
-    for(let x=25;x<W;x+=62){line(x,582,x,620,'#465950');if(x%3===1)tree(x,607,14);}
-    for(const x of [269,384,499,614])line(x,417,x,577,'#cfd9cd',3);
-    ctx.setLineDash([24,18]);line(0,220,W,220,'#e1b865',2);line(0,405,W,405,'#c9d2cd',2);ctx.setLineDash([]);
+    const [left,right,top,bottom]=lesson.road;
+    const [openingLeft,openingRight,mouth]=lesson.pocket;
+    rect(0,0,W,H,0,'#355840');
+    ctx.beginPath();
+    const edges=[[left,top],[right,top],[right,mouth],[openingRight,mouth],
+      [openingRight,bottom],[openingLeft,bottom],[openingLeft,mouth],[left,mouth]];
+    edges.forEach(([x,y],i)=>i?ctx.lineTo(x,y):ctx.moveTo(x,y));
+    ctx.closePath();
+    ctx.save();
+    ctx.clip();
+    rect(0,0,W,H,0,'#726e60');
+    ctx.drawImage(asphalt,0,0);
+    for(const x of [150,270,390,510,630])line(x,top,x,mouth,'#5a584e',1);
+    line(left,265,right,265,'#f6f0e7',2);
+    ctx.restore();
+    edges.forEach(([x,y],i)=>curb(x,y,...edges[(i+1)%edges.length]));
+    for(const [x,y] of [[106,89],[279,87],[526,90],[668,80],[129,514],[281,524],[572,520],[687,505]])
+      tree(x,y,28);
+    line(442,mouth,442,bottom-12,'#ffcf73',2);
+    line(openingLeft+7,bottom-16,openingRight-7,bottom-16,'#ffcf73',2);
   }
   if(lesson.goal){
     const [x,y,,w,l]=lesson.goal;
@@ -227,8 +250,8 @@ function draw() {
     rect(x-w/2,y-l/2,w,l,7,won?'#a7ea5870':'#a4d54432','#d6f77b');
     ctx.setLineDash([]);ctx.lineWidth=1;
     label('Ô ĐỖ',x,y+5,'#e0f8ac',16);
-    const guideX=x-w/2-7;
-    line(guideX,y-l/2-9,guideX,y+l/2+9,'#ffcf73',2);
+    const guideX=lesson.pocket?lesson.pocket[0]+6:x-w/2-7;
+    line(guideX,y-l/2,guideX,y+l/2,'#ffcf73',2);
   }
   lesson.parked.forEach(([x,y,a],i)=>vehicle({x,y,a},false,['#798d9b','#b4775d'][i],i));
   if(showGuide&&(!won||lesson.goal)){
