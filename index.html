@@ -1,10 +1,49 @@
 <!doctype html>
 <html lang="vi">
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Mô phỏng sa hình</title>
 <style>
 *{box-sizing:border-box}body{margin:0;background:#10191a;color:#f1f7ee;font:16px system-ui,sans-serif}main{max-width:1130px;margin:auto;padding:26px 20px}header{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:18px}h1{font-size:clamp(26px,5vw,42px);letter-spacing:-.06em;margin:0}h2{font-size:17px;margin:0}nav,.actions,.telemetry{display:flex;gap:8px;flex-wrap:wrap}button{font:inherit;font-weight:650;color:inherit;background:#253435;border:1px solid #445659;border-radius:9px;padding:9px 13px;cursor:pointer;touch-action:none}button[aria-pressed=true]{background:#d6f77b;color:#152516;border-color:#d6f77b}button:focus-visible{outline:2px solid #f8c670;outline-offset:3px}.game{display:grid;grid-template-columns:minmax(0,1fr) 270px;gap:14px}.scene{position:relative;min-width:0;align-self:start;border-radius:15px;overflow:hidden;border:1px solid #3d5251;background:#293636}.scene.collision{border-color:#ff8e7b}.impact{position:absolute;top:12px;left:50%;transform:translateX(-50%);padding:8px 14px;border-radius:8px;background:#852d25;color:#fff;white-space:nowrap;font-weight:750;pointer-events:none}#status.collision{color:#ffab99}canvas{width:100%;display:block}.panel{display:grid;align-content:start;gap:12px}.card{background:#1b2728;border:1px solid #354747;border-radius:14px;padding:13px}.instrument{display:block;width:100%;height:104px;margin:5px 0}.telemetry{justify-content:space-between;color:#d6f77b;font-variant-numeric:tabular-nums}p{margin:8px 0 0;line-height:1.4}#status{min-height:45px;color:#d6f77b}.hint{color:#bbceca;font-size:14px}.keys{display:grid;grid-template-columns:1fr 1fr 1fr;gap:5px;margin-top:8px}.keys button{padding:7px 3px;min-height:42px;font-size:14px}.keys .wide{grid-column:1/-1}.keys .forward{grid-column:2;grid-row:1}.keys button[data-key=ArrowLeft]{grid-column:1;grid-row:2}.keys button[data-key=ArrowDown]{grid-column:2;grid-row:2}.keys button[data-key=ArrowRight]{grid-column:3;grid-row:2}.keys .held{background:#d6f77b;color:#152516}[hidden]{display:none!important}#zigzag-choices{margin-top:8px}.actions button{flex:1;font-size:14px}@media(max-width:800px){.game{grid-template-columns:1fr}.panel{grid-template-columns:1fr 1fr}.feedback{grid-column:1/-1}}@media(max-width:430px){main{padding:12px}.game,.panel{gap:7px}.card{padding:8px}.instrument{height:85px}}
+
+.touch-label{display:none}
+.keys button{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+@media(max-width:800px),(pointer:coarse){
+  main{padding:max(10px,env(safe-area-inset-top)) max(10px,env(safe-area-inset-right)) max(14px,env(safe-area-inset-bottom)) max(10px,env(safe-area-inset-left))}
+  header{margin-bottom:8px;gap:8px}
+  header h1{font-size:26px}
+  header nav{gap:6px;width:100%}
+  header nav button{flex:1;min-height:44px;padding:5px;font-size:14px}
+  .game,.panel{gap:8px}
+  .scene canvas{width:100%;height:auto;max-height:44svh;object-fit:contain}
+  .panel{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
+  .controls{grid-column:1/-1;grid-row:1;padding:8px}
+  .keys{grid-template-columns:repeat(5,minmax(0,1fr));gap:6px;margin-top:6px}
+  .keys button[data-key]{min-width:0;min-height:54px;grid-row:1;padding:4px}
+  .keys button[data-key=ArrowLeft]{grid-column:1}
+  .keys button[data-key=ArrowRight]{grid-column:2}
+  .keys button[data-key=Space]{grid-column:3}
+  .keys button[data-key=ArrowUp]{grid-column:4}
+  .keys button[data-key=ArrowDown]{grid-column:5}
+  .keyboard-label{display:none}
+  .touch-label{display:block}
+  .keys .touch-label{font-size:19px;line-height:1.1}
+  .keys .touch-label span{display:block;margin-top:2px;font-size:13px}
+  .keys .wide .touch-label{font-size:14px}
+  .controls .hint{margin-top:5px;font-size:13px}
+  .panel .actions:not(#zigzag-choices){grid-column:1/-1;grid-row:2}
+  .actions button{min-height:44px;padding:5px}
+  .feedback{grid-column:auto}
+  .instrument{height:82px;margin:4px 0}
+  .card:not(.controls){padding:8px}
+  #status{min-height:0}
+}
+@media (orientation:landscape) and (pointer:coarse) and (min-width:650px){
+  header nav{width:auto}
+  .game{grid-template-columns:minmax(0,1fr) minmax(285px,42%)}
+  .scene canvas{max-height:calc(100svh - 78px)}
+  .panel .instrument{height:56px}
+}
 </style>
 <main>
 <header><h1>Mô phỏng sa hình</h1><nav aria-label="Chọn bài tập"><button data-mode="parallel" aria-pressed="true">Ghép ngang</button><button data-mode="perpendicular" aria-pressed="false">Ghép dọc</button><button id="zigzag" aria-pressed="false">Hình chữ chi</button></nav></header>
@@ -18,9 +57,9 @@
 <rect id="tireL" x="134" y="26" width="13" height="32" rx="4" fill="#d6f77b"/><rect id="tireR" x="210" y="26" width="13" height="32" rx="4" fill="#d6f77b"/>
 <path d="M145 79v9m66-9v9" stroke="#819f9c" stroke-width="8" stroke-linecap="round"/></svg>
 <div class="telemetry"><span id="angle">Thẳng · 0°</span><span id="direction">Đang dừng</span></div></section>
-<section class="card"><h2>Điều khiển</h2><div class="keys">
-<button class="forward" data-key="ArrowUp" aria-label="Tiến">↑ / W</button><button data-key="ArrowLeft" aria-label="Đánh lái trái">← / A</button><button data-key="ArrowDown" aria-label="Lùi">↓ / S</button><button data-key="ArrowRight" aria-label="Đánh lái phải">→ / D</button><button class="wide" data-key="Space">Space · Phanh</button>
-</div><p class="hint">G để trả lái, Esc để tập lại. Góc lái được giữ khi bạn thả phím.</p></section>
+<section class="card controls"><h2>Điều khiển</h2><div class="keys">
+<button class="forward" data-key="ArrowUp" aria-label="Tiến"><span class="touch-label" aria-hidden="true">↑<span>Tiến</span></span><span class="keyboard-label">↑ / W</span></button><button data-key="ArrowLeft" aria-label="Đánh lái trái"><span class="touch-label" aria-hidden="true">←<span>Trái</span></span><span class="keyboard-label">← / A</span></button><button data-key="ArrowDown" aria-label="Lùi"><span class="touch-label" aria-hidden="true">↓<span>Lùi</span></span><span class="keyboard-label">↓ / S</span></button><button data-key="ArrowRight" aria-label="Đánh lái phải"><span class="touch-label" aria-hidden="true">→<span>Phải</span></span><span class="keyboard-label">→ / D</span></button><button class="wide" data-key="Space" aria-label="Phanh"><span class="touch-label" aria-hidden="true">Phanh</span><span class="keyboard-label">Space · Phanh</span></button>
+</div><p class="hint keyboard-label">G để trả lái, Esc để tập lại. Góc lái được giữ khi bạn thả phím.</p><p class="hint touch-label">Giữ đồng thời nút di chuyển và nút đánh lái để vào cua.</p></section>
 <section class="card feedback"><h2 id="lesson">Ghép ngang</h2><div id="zigzag-choices" class="actions" hidden aria-label="Chiều chạy"><button data-mode="zigzagForward" aria-pressed="false">Xuôi</button><button data-mode="zigzagReverse" aria-pressed="false">Ngược</button></div><p id="status" role="status"></p><p class="hint" id="tip"></p></section>
 <div class="actions"><button id="center">Trả lái</button><button id="reset">Tập lại</button><button id="guide" aria-pressed="false">Quỹ đạo</button><button id="alignment" aria-pressed="false">Canh thân xe</button></div>
 </aside></div></main>
@@ -28,7 +67,7 @@
 'use strict';
 const byId = id => document.getElementById(id);
 const ctx = byId('map').getContext('2d');
-const W = 760, H = 620, carWidth = 56, carLength = 111, wheelbase = 73;
+const W = 760, H = 620, parallelLeft = 290, carWidth = 56, carLength = 111, wheelbase = 73;
 const input = new Map();
 const keys = new Set();
 const buttons = [...document.querySelectorAll('[data-key]')];
@@ -43,7 +82,7 @@ const lessons = {
   zigzagReverse: {...slalom, name:'Hình chữ chi', start:[681,328,Math.PI/2], finish:155,
     tip:'Dùng S hoặc ↓ để chạy lùi từ phải sang trái, giữ cả xe giữa hai vạch gấp khúc.'},
   parallel: {name:'Ghép ngang', start:[516,162,0], goal:[608,328,0,78,156],
-    parked:[[608,162,0],[608,489,0]], road:[215,656,14,606],
+    parked:[[608,162,0],[608,489,0]], road:[parallelLeft+12,656,14,606],
     tip:'Xe bắt đầu ngang xe đỗ phía trên. Khi lùi, đánh phải để đuôi vào ô rồi đánh trái để thân xe song song với lề.'},
   perpendicular: {name:'Ghép dọc', start:[630,376,-Math.PI/2], goal:[442,503,0,86,146],
     pocket:[392,492,425], parked:[], road:[69,736,150,585],
@@ -55,7 +94,8 @@ let mode, lesson, car, steer, speed, won, showGuide = false, showAlignment = fal
 function reset(next = mode) {
   mode=next;
   lesson=lessons[mode];
-  byId('map').width=mode==='parallel'?W-200:W;
+  const mapWidth=mode==='parallel'?W-parallelLeft:W;
+  if(byId('map').width!==mapWidth)byId('map').width=mapWidth;
   const [x,y,a]=lesson.start;
   car={x,y,a};
   steer=speed=bumpUntil=0;
@@ -212,7 +252,7 @@ function drawSlalom(){
 function draw() {
   ctx.save();
   const parallel=mode==='parallel';
-  if(parallel)ctx.translate(-200,0);
+  if(parallel)ctx.translate(-parallelLeft,0);
   rect(0,0,W,H,0,'#303e41');
   ctx.drawImage(asphalt,0,0);
   if(lesson.lane){
@@ -221,10 +261,10 @@ function draw() {
     rect(657,0,103,H,0,'#63706a');
     for(let y=0;y<H;y+=41)line(659,y,760,y,'#4b5b55');
     curb(656,0,656,H);
-    rect(0,0,215,H,0,'#63706a');
-    line(215,0,215,H,'#c4cbc0',3);
-    ctx.setLineDash([25,17]);line(390,0,390,H,'#e4e8dc',2);ctx.setLineDash([]);
-    for(const x of [302,478]){
+    rect(0,0,parallelLeft+12,H,0,'#63706a');
+    line(parallelLeft+12,0,parallelLeft+12,H,'#c4cbc0',3);
+    ctx.setLineDash([25,17]);line(430,0,430,H,'#e4e8dc',2);ctx.setLineDash([]);
+    for(const x of [366,500]){
       for(const y of [84,319,550]){
         line(x,y+16,x,y-12,'#aebdb5',3);
         line(x-7,y-5,x,y-12,'#aebdb5',3);
