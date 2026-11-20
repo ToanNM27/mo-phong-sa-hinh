@@ -185,21 +185,30 @@ function createCockpit(panel, point, corners) {
       render(panel.ctx,{...eye,a:eye.a+panel.yaw},ground,objects,signs,signal);
     }
 
-    // All three projections share a single eye. Reproject onto a cylinder
-    // to join them into one field of view, with no separate side feeds.
+    // Use straight-line perspective through the windshield, with a smooth
+    // transition to the wider panoramic projection at the side windows.
     ctx.fillStyle='#263637';
     ctx.fillRect(0,0,w,h);
-    const span=Math.PI;
+    function angleAt(u){
+      const offset=u-.53, edge=offset<0 ? .53 : .47;
+      const amount=Math.max(0,(Math.abs(offset)-.245)/(edge-.245));
+      const rectilinear=Math.atan(offset/.51);
+      return rectilinear+Math.sign(offset)*(Math.PI*.515-Math.atan(edge/.51))*amount**2;
+    }
     for(let x=0;x<w;x+=2){
       const stripWidth=Math.min(2,w-x);
-      const angle=((x+stripWidth/2)/w-.53)*span;
+      const start=x/w, end=(x+stripWidth)/w;
+      const u=(start+end)/2;
+      const angle=angleAt(u);
       const index=Math.max(0,Math.min(2,Math.round(angle/yawStep)+1));
       const {canvas,yaw}=panels[index];
       const relative=angle-yaw;
       const focal=canvas.width*.63;
       const sourceX=canvas.width*.5+Math.tan(relative)*focal;
-      const sourceWidth=Math.max(1,focal*span*stripWidth/w/Math.cos(relative)**2);
-      const zoom=h*.86/focal*Math.cos(relative);
+      const sourceWidth=Math.max(1,focal*(angleAt(end)-angleAt(start))/Math.cos(relative)**2);
+      const blend=Math.min(1,Math.max(0,(Math.abs(u-.53)-.245)/.16));
+      const perspective=Math.cos(angle)*(1-blend)+blend;
+      const zoom=h*.86/focal*Math.cos(relative)/perspective;
       ctx.drawImage(canvas,sourceX-sourceWidth/2,0,sourceWidth,canvas.height,
         x,h*.35-canvas.height*.35*zoom,stripWidth,canvas.height*zoom);
     }
@@ -207,7 +216,7 @@ function createCockpit(panel, point, corners) {
     ctx.fillStyle='#263637';
     ctx.beginPath();
     ctx.moveTo(0,h*.68);ctx.quadraticCurveTo(w*.12,h*.75,w*.22,h*.63);
-    ctx.quadraticCurveTo(w*.55,h*.51,w*.81,h*.64);
+    ctx.quadraticCurveTo(w*.55,h*.58,w*.81,h*.64);
     ctx.quadraticCurveTo(w*.93,h*.71,w,h*.67);
     ctx.lineTo(w,h);ctx.lineTo(0,h);ctx.closePath();ctx.fill();
     ctx.fillStyle='#364746';
