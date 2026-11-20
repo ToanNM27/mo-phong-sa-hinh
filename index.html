@@ -15,16 +15,22 @@
   header nav{gap:6px;width:100%}
   header nav button{flex:1;min-height:44px;padding:5px;font-size:14px}
   .game,.panel{gap:8px}
-  .scene canvas{width:100%;height:auto;max-height:44svh;object-fit:contain}
+  .scene canvas{width:100%;height:auto;max-height:39svh;object-fit:contain}
   .panel{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
   .controls{grid-column:1/-1;grid-row:1;padding:8px}
-  .keys{grid-template-columns:repeat(5,minmax(0,1fr));gap:6px;margin-top:6px}
-  .keys button[data-key]{min-width:0;min-height:54px;grid-row:1;padding:4px}
-  .keys button[data-key=ArrowLeft]{grid-column:1}
-  .keys button[data-key=ArrowRight]{grid-column:2}
-  .keys button[data-key=Space]{grid-column:3}
-  .keys button[data-key=ArrowUp]{grid-column:4}
-  .keys button[data-key=ArrowDown]{grid-column:5}
+  .keys{
+    grid-template-columns:repeat(3,minmax(0,66px)) minmax(56px,74px);
+    grid-template-areas:". forward . ." "left . right brake" ". reverse . .";
+    justify-content:center;
+    gap:5px;
+    margin-top:6px;
+  }
+  .keys button[data-key]{min-width:0;min-height:48px;padding:4px}
+  .keys button[data-key=ArrowUp]{grid-area:forward}
+  .keys button[data-key=ArrowLeft]{grid-area:left}
+  .keys button[data-key=ArrowRight]{grid-area:right}
+  .keys button[data-key=ArrowDown]{grid-area:reverse}
+  .keys button[data-key=Space]{grid-area:brake;margin-inline-start:6px}
   .keyboard-label{display:none}
   .touch-label{display:block}
   .keys .touch-label{font-size:19px;line-height:1.1}
