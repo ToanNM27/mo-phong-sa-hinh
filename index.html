@@ -84,9 +84,14 @@
 #placement-angle{color:#d6f77b;font-weight:700;font-variant-numeric:tabular-nums}
 .placement-presets{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;margin-top:8px}
 .placement-presets button{min-height:44px;padding:4px;font-size:14px}
+
+.parking-flow{grid-column:1/-1}
+.parking-flow h2{color:#d6f77b}
+.parking-flow p{margin-top:4px}
+.parking-flow strong{color:#fff4c1}
 </style>
 <main>
-<header><h1>Mô phỏng sa hình</h1><nav aria-label="Chọn bài tập"><button data-mode="parallel" aria-pressed="true">Ghép ngang</button><button data-mode="perpendicular" aria-pressed="false">Ghép dọc</button><button id="zigzag" aria-pressed="false">Hình chữ chi</button><button id="course-mode" data-mode="full" aria-pressed="false">Toàn sa hình</button></nav></header>
+<header><h1>Mô phỏng sa hình</h1><nav aria-label="Chọn bài tập"><button data-mode="parallel" aria-pressed="true">Ghép ngang</button><button data-mode="perpendicular" aria-pressed="false">Ghép dọc</button><button id="zigzag" aria-pressed="false">Hình chữ chi</button></nav></header>
 <div class="game">
 <div class="scene"><canvas id="map" width="760" height="620" aria-label="Sân tập nhìn từ trên xuống. Xe của bạn màu xanh sáng, ô đỗ có nét đứt."></canvas><div id="cockpit" hidden>
 <div class="cockpit">
@@ -118,8 +123,13 @@
 <button data-course-control="belt" title="Phím B" aria-pressed="false">Dây an toàn</button><button data-course-control="left" title="Phím Q" aria-pressed="false">Xi-nhan trái</button><button data-course-control="right" title="Phím E" aria-pressed="false">Xi-nhan phải</button><button data-course-control="gear" title="Phím F">Số 1</button><button data-course-control="engine" title="Phím I" aria-pressed="true">Máy đang bật</button>
 </div><p class="hint keyboard-label">G để trả lái, Esc để tập lại. Góc lái được giữ khi bạn thả phím.</p><p class="hint touch-label">Giữ đồng thời nút di chuyển và nút đánh lái để vào cua.</p></section>
 <section class="card feedback"><h2 id="lesson">Ghép ngang</h2><div id="zigzag-choices" class="actions" hidden aria-label="Chiều chạy"><button data-mode="zigzagForward" aria-pressed="false">Xuôi</button><button data-mode="zigzagReverse" aria-pressed="false">Ngược</button></div><p id="status" role="status"></p><p class="hint" id="tip"></p></section>
-<div class="actions"><button id="center">Trả lái</button><button id="reset">Tập lại</button><button id="guide" aria-pressed="false">Quỹ đạo</button><button id="alignment" aria-pressed="false">Canh thân xe</button><button id="cockpit-toggle" aria-pressed="false">Buồng lái</button><button id="placement" aria-pressed="false">Dời / xoay xe</button></div>
+<div class="actions"><button id="center">Trả lái</button><button id="reset">Tập lại</button><button id="guide" aria-pressed="false">Quỹ đạo</button><button id="alignment" aria-pressed="false">Canh thân xe</button><button id="parking-flow-toggle" aria-pressed="false">Hướng dẫn từng bước</button><button id="cockpit-toggle" aria-pressed="false">Buồng lái</button><button id="placement" aria-pressed="false">Dời / xoay xe</button></div>
 <section id="placement-settings" class="card placement-settings" hidden><div class="placement-title"><h2>Góc thân xe</h2><output id="placement-angle">360°</output></div><p class="hint">360° hướng lên, góc tăng theo chiều kim đồng hồ.</p><div class="placement-presets"><button type="button" data-heading="45" aria-pressed="false">45°</button><button type="button" data-heading="90" aria-pressed="false">90°</button><button type="button" data-heading="180" aria-pressed="false">180°</button><button type="button" data-heading="225" aria-pressed="false">225°</button><button type="button" data-heading="270" aria-pressed="false">270°</button><button type="button" data-heading="315" aria-pressed="false">315°</button><button type="button" data-heading="360" aria-pressed="false">360°</button></div></section>
+<section class="card parking-flow" id="parking-flow" hidden aria-label="Hướng dẫn ghép xe">
+<h2 id="parking-flow-title"></h2>
+<p id="parking-flow-command"></p>
+<p id="parking-flow-note" class="hint" role="status"></p>
+</section>
 </aside></div></main>
 <script src="./course.js?v=3"></script>
 <script src="./cockpit.js?v=8"></script>
@@ -154,12 +164,12 @@ const lessons = {
 const full=typeof createFullCourse==='function'?createFullCourse({point,corners,line,rect,label}):null;
 if(full)lessons.full={name:'Toàn sa hình',course:full,start:full.start,road:full.road,parked:full.parked,
   tip:'Theo biển báo và chỉ dẫn của bài đang chạy. B bật dây an toàn, Q/E bật xi-nhan, F đổi số, I bật/tắt máy.'};
-byId('course-mode').hidden=!full;
 const courseButtons=[...document.querySelectorAll('[data-course-control]')];
 const headingButtons=[...document.querySelectorAll('[data-heading]')];
 const clamp = (n,min,max) => Math.max(min,Math.min(max,n));
 const parkingAngleLimit = Math.sin(4*Math.PI/180);
 let placing=false, placementDrag=null, placementBlocked=false;
+let flowEnabled=false, flowSteps=[], flowIndex=0;
 let mode, lesson, car, steer, speed, won, showGuide = false, showAlignment = false, bumpUntil, impact;
 function reset(next = mode) {
   mode=next;
@@ -177,6 +187,7 @@ function reset(next = mode) {
   won=false;
   impact='';
   setPlacement(false);
+  resetParkingFlow();
   byId('lesson').textContent=lesson.name;
   byId('zigzag-choices').hidden=!lesson.lane;
   byId('zigzag').setAttribute('aria-pressed',Boolean(lesson.lane));
@@ -239,8 +250,8 @@ function inBay() {
   const [x,y,,w,l]=lesson.goal;
   return corners(car).every(([px,py])=>Math.abs(px-x)<w/2-2 && Math.abs(py-y)<l/2-2);
 }
-function advance(pose,distance) {
-  const a=pose.a+distance*Math.tan(steer)/wheelbase;
+function advance(pose,distance,angle=steer) {
+  const a=pose.a+distance*Math.tan(angle)/wheelbase;
   const rear=point(pose,0,wheelbase/2);
   const mid=(a+pose.a)/2;
   return {x:rear[0]+distance*Math.sin(mid)+wheelbase/2*Math.sin(a),
@@ -341,6 +352,7 @@ function draw(now=performance.now()) {
     full.draw(ctx,now);
   }else drawPracticeMap(parallel);
   if(lesson.goal)drawBay();
+  drawParkingFlow();
   drawDrivingOverlays();
   ctx.restore();
 }
@@ -475,6 +487,7 @@ function update(dt,now) {
   const aligned=inside && Math.abs(Math.sin(car.a-lesson.goal[2]))<=parkingAngleLimit;
   const collision=now<bumpUntil && (!won||lesson.goal);
   if(lesson.goal)won=Boolean(!placing && aligned && !speed && !collision);
+  if(flowEnabled&&flowSteps.length)updateParkingFlow(collision);
   byId('impact').hidden=!collision;
   byId('map').parentElement.classList.toggle('collision',collision);
   byId('status').classList.toggle('collision',collision);
@@ -501,6 +514,121 @@ function clearKeys(){
   keys.clear();
   buttons.forEach(b=>b.classList.remove('held'));
 }
+function parkingPlan(){
+  const [x,y,a]=lesson.start;
+  const [goalX,goalY]=lesson.goal;
+  const maxTurn=.64, radius=wheelbase/Math.tan(maxTurn);
+  const steps=[];
+  let pose={x,y,a};
+  function step(title,command,distance,angle){
+    if(Math.abs(distance)<2)return;
+    const samples=[pose], count=Math.ceil(Math.abs(distance)/2);
+    for(let i=0;i<count;i++){
+      pose=advance(pose,distance/count,angle);
+      samples.push(pose);
+    }
+    steps.push({title,command,distance,angle,samples,target:pose});
+  }
+  if(mode==='parallel'){
+    const angle=Math.acos(1-(goalX-x)/(2*radius));
+    step('Căn ngang xe đỗ phía trước','Trả lái thẳng và nhích đến khung nét đứt.',
+      y-(goalY-2*radius*Math.sin(angle)),0);
+    step('Đưa đuôi vào ô','Dừng, đánh hết lái phải, rồi lùi chậm đến mốc.',
+      -radius*angle,maxTurn);
+    step('Đưa đầu xe vào ô','Dừng, đánh hết lái trái, rồi lùi đến khi thân xe song song với lề.',
+      -radius*angle,-maxTurn);
+  }else{
+    const approachY=323;
+    const angle=Math.acos(1-(y-approachY)/(2*radius));
+    step('Tách khỏi lề dưới','Dừng, đánh hết lái phải rồi tiến đến mốc.',
+      radius*angle,maxTurn);
+    step('Cân lại thân xe','Dừng, đánh hết lái trái rồi tiến cho thân xe song song với lề.',
+      radius*angle,-maxTurn);
+    step('Tiến qua miệng chuồng','Trả lái thẳng, tiến đến mốc bên trái ô đỗ.',
+      pose.x-(goalX-wheelbase/2-radius),0);
+    step('Đưa đuôi vào chuồng','Dừng, đánh hết lái trái rồi lùi đến khi xe thẳng theo ô.',
+      -radius*Math.PI/2,-maxTurn);
+    step('Lùi thẳng vào ô','Trả lái thẳng, lùi đến khi cả xe vào ô rồi dừng.',
+      -(goalY-(approachY+radius-wheelbase/2)),0);
+  }
+  return steps;
+}
+function resetParkingFlow(){
+  flowIndex=0;
+  if(!lesson.goal)flowEnabled=false;
+  flowSteps=flowEnabled?parkingPlan():[];
+  byId('parking-flow-toggle').hidden=!lesson.goal;
+  byId('parking-flow-toggle').setAttribute('aria-pressed',flowEnabled);
+  byId('parking-flow').hidden=!flowEnabled;
+  if(flowEnabled)updateParkingFlow(false);
+}
+function setFlowText(id,message){
+  const element=byId(id);
+  if(element.textContent!==message)element.textContent=message;
+}
+function updateParkingFlow(collision){
+  if(won){
+    flowIndex=flowSteps.length;
+    setFlowText('parking-flow-title','Hoàn thành hướng dẫn');
+    setFlowText('parking-flow-command','Xe đã thẳng và nằm trọn trong ô.');
+    setFlowText('parking-flow-note','Bấm Tập lại để làm lại từ đầu.');
+    return;
+  }
+  const current=flowSteps[Math.min(flowIndex,flowSteps.length-1)];
+  const target=current.target;
+  const gap=Math.hypot(car.x-target.x,car.y-target.y);
+  const headingGap=Math.abs(Math.atan2(Math.sin(car.a-target.a),Math.cos(car.a-target.a)));
+  const reached=gap<=13&&headingGap<.17;
+  if(!placing&&!collision&&!speed&&reached&&flowIndex<flowSteps.length-1){
+    flowIndex++;
+    updateParkingFlow(false);
+    return;
+  }
+  const step=Math.min(flowIndex+1,flowSteps.length);
+  setFlowText('parking-flow-title','Bước '+step+'/'+flowSteps.length+' · '+current.title);
+  setFlowText('parking-flow-command',current.command);
+  let note='Khung nét đứt màu xanh là vị trí xe cần dừng.';
+  if(placing)note='Bấm Xong để tiếp tục. Nếu đã đổi vị trí xe, bấm Tập lại để theo tuyến mẫu.';
+  else if(collision)note='Bạn đã chạm vật cản. Chỉnh lại gần đường mẫu hoặc bấm Tập lại.';
+  else if(reached&&speed)note='Đã gần mốc. Nhả ga hoặc phanh để dừng.';
+  else if(current.samples.every(p=>Math.hypot(p.x-car.x,p.y-car.y)>38))
+    note='Xe đang lệch khỏi đường mẫu. Chỉnh về gần đường chấm hoặc bấm Tập lại.';
+  else if(!speed&&Math.abs(steer-current.angle)>.09){
+    const direction=current.angle===0?'Trả lái cho bánh thẳng.':
+      current.angle>0?'Giữ Phải (→ hoặc D) đến hết lái.':'Giữ Trái (← hoặc A) đến hết lái.';
+    note=direction;
+  }else if(!speed)note=current.distance<0?'Giữ Lùi (↓ hoặc S) và dừng ở mốc.':'Giữ Tiến (↑ hoặc W) và dừng ở mốc.';
+  setFlowText('parking-flow-note',note);
+}
+function drawParkingFlow(){
+  if(!flowEnabled||placing||won||!flowSteps.length)return;
+  const step=flowSteps[Math.min(flowIndex,flowSteps.length-1)];
+  ctx.save();
+  ctx.strokeStyle='#8feee3';
+  ctx.lineWidth=2.5;
+  ctx.setLineDash([4,7]);
+  ctx.beginPath();
+  step.samples.forEach(({x,y},i)=>i?ctx.lineTo(x,y):ctx.moveTo(x,y));
+  ctx.stroke();
+  const outline=corners(step.target);
+  ctx.setLineDash([9,6]);
+  ctx.beginPath();
+  outline.forEach(([x,y],i)=>i?ctx.lineTo(x,y):ctx.moveTo(x,y));
+  ctx.closePath();
+  ctx.fillStyle='#58e6d31c';
+  ctx.fill();ctx.stroke();
+  ctx.setLineDash([]);
+  line(...point(step.target,0,-13),...point(step.target,0,-42),'#8feee3',2.5);
+  for(const side of [-1,1])
+    line(...point(step.target,side*7,-34),...point(step.target,0,-42),'#8feee3',2.5);
+  ctx.restore();
+}
+byId('parking-flow-toggle').onclick=()=>{
+  if(!lesson.goal)return;
+  flowEnabled=!flowEnabled;
+  resetParkingFlow();
+  byId('parking-flow-toggle').blur();
+};
 function setPlacement(enabled){
   placing=enabled;
   if(placementDrag&&map.hasPointerCapture(placementDrag.id))
