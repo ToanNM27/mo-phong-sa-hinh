@@ -334,9 +334,10 @@ function draw() {
   }
   vehicle(car,true,'#62b647');
   if(showAlignment){
+    const halfGuideLength=carLength*1.5;
     for(const offset of [-wheelOffset,wheelOffset]){
-      const [x0,y0]=point(car,offset,-carLength/2);
-      const [x1,y1]=point(car,offset,carLength/2);
+      const [x0,y0]=point(car,offset,-halfGuideLength);
+      const [x1,y1]=point(car,offset,halfGuideLength);
       line(x0,y0,x1,y1,'#ffffff',2.5);
     }
   }
