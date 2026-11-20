@@ -2,12 +2,12 @@
 <html lang="vi">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Sân tập lùi xe</title>
+<title>Mô phỏng sa hình</title>
 <style>
 *{box-sizing:border-box}body{margin:0;background:#10191a;color:#f1f7ee;font:16px system-ui,sans-serif}main{max-width:1130px;margin:auto;padding:26px 20px}header{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:18px}h1{font-size:clamp(26px,5vw,42px);letter-spacing:-.06em;margin:0}h2{font-size:17px;margin:0}nav,.actions,.telemetry{display:flex;gap:8px;flex-wrap:wrap}button{font:inherit;font-weight:650;color:inherit;background:#253435;border:1px solid #445659;border-radius:9px;padding:9px 13px;cursor:pointer;touch-action:none}button[aria-pressed=true]{background:#d6f77b;color:#152516;border-color:#d6f77b}button:focus-visible{outline:2px solid #f8c670;outline-offset:3px}.game{display:grid;grid-template-columns:minmax(0,1fr) 270px;gap:14px}.scene{position:relative;min-width:0;align-self:start;border-radius:15px;overflow:hidden;border:1px solid #3d5251;background:#293636}.scene.collision{border-color:#ff8e7b}.impact{position:absolute;top:12px;left:50%;transform:translateX(-50%);padding:8px 14px;border-radius:8px;background:#852d25;color:#fff;white-space:nowrap;font-weight:750;pointer-events:none}#status.collision{color:#ffab99}canvas{width:100%;display:block}.panel{display:grid;align-content:start;gap:12px}.card{background:#1b2728;border:1px solid #354747;border-radius:14px;padding:13px}.instrument{display:block;width:100%;height:104px;margin:5px 0}.telemetry{justify-content:space-between;color:#d6f77b;font-variant-numeric:tabular-nums}p{margin:8px 0 0;line-height:1.4}#status{min-height:45px;color:#d6f77b}.hint{color:#bbceca;font-size:14px}.keys{display:grid;grid-template-columns:1fr 1fr 1fr;gap:5px;margin-top:8px}.keys button{padding:7px 3px;min-height:42px;font-size:14px}.keys .wide{grid-column:1/-1}.keys .forward{grid-column:2;grid-row:1}.keys button[data-key=ArrowLeft]{grid-column:1;grid-row:2}.keys button[data-key=ArrowDown]{grid-column:2;grid-row:2}.keys button[data-key=ArrowRight]{grid-column:3;grid-row:2}.keys .held{background:#d6f77b;color:#152516}[hidden]{display:none!important}#zigzag-choices{margin-top:8px}.actions button{flex:1;font-size:14px}@media(max-width:800px){.game{grid-template-columns:1fr}.panel{grid-template-columns:1fr 1fr}.feedback{grid-column:1/-1}}@media(max-width:430px){main{padding:12px}.game,.panel{gap:7px}.card{padding:8px}.instrument{height:85px}}
 </style>
 <main>
-<header><h1>Sân tập lùi xe</h1><nav aria-label="Chọn bài tập"><button data-mode="parallel" aria-pressed="true">Ghép ngang</button><button data-mode="perpendicular" aria-pressed="false">Ghép dọc</button><button id="zigzag" aria-pressed="false">Hình chữ chi</button></nav></header>
+<header><h1>Mô phỏng sa hình</h1><nav aria-label="Chọn bài tập"><button data-mode="parallel" aria-pressed="true">Ghép ngang</button><button data-mode="perpendicular" aria-pressed="false">Ghép dọc</button><button id="zigzag" aria-pressed="false">Hình chữ chi</button></nav></header>
 <div class="game">
 <div class="scene"><canvas id="map" width="760" height="620" aria-label="Sân tập nhìn từ trên xuống. Xe của bạn màu xanh sáng, ô đỗ có nét đứt."></canvas><div id="impact" class="impact" aria-hidden="true" hidden>Va chạm · Xe đã dừng</div></div>
 <aside class="panel">
@@ -22,7 +22,7 @@
 <button class="forward" data-key="ArrowUp" aria-label="Tiến">↑ / W</button><button data-key="ArrowLeft" aria-label="Đánh lái trái">← / A</button><button data-key="ArrowDown" aria-label="Lùi">↓ / S</button><button data-key="ArrowRight" aria-label="Đánh lái phải">→ / D</button><button class="wide" data-key="Space">Space · Phanh</button>
 </div><p class="hint">G để trả lái, Esc để tập lại. Góc lái được giữ khi bạn thả phím.</p></section>
 <section class="card feedback"><h2 id="lesson">Ghép ngang</h2><div id="zigzag-choices" class="actions" hidden aria-label="Chiều chạy"><button data-mode="zigzagForward" aria-pressed="false">Xuôi</button><button data-mode="zigzagReverse" aria-pressed="false">Ngược</button></div><p id="status" role="status"></p><p class="hint" id="tip"></p></section>
-<div class="actions"><button id="center">Trả lái</button><button id="reset">Tập lại</button><button id="guide" aria-pressed="false">Quỹ đạo</button></div>
+<div class="actions"><button id="center">Trả lái</button><button id="reset">Tập lại</button><button id="guide" aria-pressed="false">Quỹ đạo</button><button id="alignment" aria-pressed="false">Canh thân xe</button></div>
 </aside></div></main>
 <script>
 'use strict';
@@ -42,16 +42,16 @@ const lessons = {
     tip:'Dùng W hoặc ↑ để chạy tiến từ trái sang phải, giữ cả xe giữa hai vạch gấp khúc.'},
   zigzagReverse: {...slalom, name:'Hình chữ chi', start:[681,328,Math.PI/2], finish:155,
     tip:'Dùng S hoặc ↓ để chạy lùi từ phải sang trái, giữ cả xe giữa hai vạch gấp khúc.'},
-  parallel: {name:'Ghép ngang', start:[516,162,0], goal:[608,328,0,87,180],
+  parallel: {name:'Ghép ngang', start:[516,162,0], goal:[608,328,0,78,156],
     parked:[[608,162,0],[608,489,0]], road:[25,656,14,606],
     tip:'Xe bắt đầu ngang xe đỗ phía trên. Khi lùi, đánh phải để đuôi vào ô rồi đánh trái để thân xe song song với lề.'},
-  perpendicular: {name:'Ghép dọc', start:[407,353,-Math.PI/2], goal:[442,499,0,100,160],
+  perpendicular: {name:'Ghép dọc', start:[407,353,-Math.PI/2], goal:[442,499,0,86,146],
     parked:[[327,499,0],[557,499,0]], road:[25,735,14,579],
     tip:'Đưa xe sang trái ô đỗ. Đánh trái khi lùi để đuôi vào ô, rồi trả lái khi thân xe thẳng theo vạch.'}
 };
 const clamp = (n,min,max) => Math.max(min,Math.min(max,n));
 const parkingAngleLimit = Math.sin(4*Math.PI/180);
-let mode, lesson, car, steer, speed, won, showGuide = false, bumpUntil, impact;
+let mode, lesson, car, steer, speed, won, showGuide = false, showAlignment = false, bumpUntil, impact;
 function reset(next = mode) {
   mode=next;
   lesson=lessons[mode];
@@ -125,6 +125,15 @@ function rect(x,y,w,h,r,fill,stroke) {
 }
 function line(x,y,X,Y,color,width=1) {
   ctx.beginPath();ctx.moveTo(x,y);ctx.lineTo(X,Y);ctx.strokeStyle=color;ctx.lineWidth=width;ctx.stroke();ctx.lineWidth=1;
+}
+function curb(x,y,endX,endY){
+  const length=Math.hypot(endX-x,endY-y);
+  const segments=Math.ceil(length/18);
+  for(let i=0;i<segments;i++){
+    const a=i/segments, b=(i+1)/segments;
+    line(x+(endX-x)*a,y+(endY-y)*a,x+(endX-x)*b,y+(endY-y)*b,
+      i%2?'#f6f0e7':'#e15347',7);
+  }
 }
 function label(s,x,y,color,size=14) {
   ctx.fillStyle=color;ctx.font='700 '+size+'px system-ui';ctx.textAlign='center';ctx.fillText(s,x,y);
@@ -200,16 +209,17 @@ function draw() {
   }else if(parallel){
     rect(657,0,103,H,0,'#63706a');
     for(let y=0;y<H;y+=41)line(659,y,760,y,'#4b5b55');
-    line(656,0,656,H,'#b6beb1',5);
+    curb(656,0,656,H);
     line(164,0,164,H,'#d9ae57',3);line(173,0,173,H,'#d9ae57',3);
+    ctx.setLineDash([25,17]);line(354,0,354,H,'#c9d2cd',2);ctx.setLineDash([]);
     for(const y of [55,220,390,555]){rect(699,y-30,61,60,8,'#3a5345');tree(732,y,23);}
     for(const y of [221,432])line(559,y,654,y,'#cfd9cd',3);
   }else{
     rect(0,581,W,39,0,'#64736a');
-    line(0,580,W,580,'#b6beb1',5);
+    curb(0,580,W,580);
     for(let x=25;x<W;x+=62){line(x,582,x,620,'#465950');if(x%3===1)tree(x,607,14);}
     for(const x of [269,384,499,614])line(x,417,x,577,'#cfd9cd',3);
-    ctx.setLineDash([24,18]);line(0,220,W,220,'#e1b865',2);ctx.setLineDash([]);
+    ctx.setLineDash([24,18]);line(0,220,W,220,'#e1b865',2);line(0,405,W,405,'#c9d2cd',2);ctx.setLineDash([]);
   }
   if(lesson.goal){
     const [x,y,,w,l]=lesson.goal;
@@ -217,6 +227,8 @@ function draw() {
     rect(x-w/2,y-l/2,w,l,7,won?'#a7ea5870':'#a4d54432','#d6f77b');
     ctx.setLineDash([]);ctx.lineWidth=1;
     label('Ô ĐỖ',x,y+5,'#e0f8ac',16);
+    const guideX=x-w/2-7;
+    line(guideX,y-l/2-9,guideX,y+l/2+9,'#ffcf73',2);
   }
   lesson.parked.forEach(([x,y,a],i)=>vehicle({x,y,a},false,['#798d9b','#b4775d'][i],i));
   if(showGuide&&(!won||lesson.goal)){
@@ -234,6 +246,12 @@ function draw() {
       }
       if(hit)break;
     }
+  }
+  if(showAlignment){
+    const side=-carWidth/2-9;
+    const [x0,y0]=point(car,side,-carLength/2);
+    const [x1,y1]=point(car,side,carLength/2);
+    line(x0,y0,x1,y1,'#ffffff',3);
   }
   vehicle(car,true,'#62b647');
 }
@@ -325,6 +343,11 @@ byId('zigzag').onclick=()=>{if(!lesson.lane)reset('zigzagForward');byId('zigzag'
 byId('reset').onclick=()=>{reset();byId('reset').blur();};
 byId('center').onclick=()=>{steer=0;byId('center').blur();};
 byId('guide').onclick=()=>{showGuide=!showGuide;byId('guide').setAttribute('aria-pressed',showGuide);byId('guide').blur();};
+byId('alignment').onclick=()=>{
+  showAlignment=!showAlignment;
+  byId('alignment').setAttribute('aria-pressed',showAlignment);
+  byId('alignment').blur();
+};
 reset('parallel');
 let previous=performance.now();
 function frame(now){update(Math.min((now-previous)/1000,.035),now);draw();previous=now;requestAnimationFrame(frame);}
