@@ -52,11 +52,43 @@
   .scene canvas{max-height:calc(100svh - 78px)}
   .panel .instrument{height:56px}
 }
+
+.cockpit{position:relative;overflow:hidden;background:#263637}
+.cockpit .windshield{width:100%;aspect-ratio:19/11;max-height:44svh;object-fit:contain}
+.cockpit-mirrors{position:absolute;left:3%;right:3%;bottom:5%;display:flex;justify-content:space-between;pointer-events:none}
+.cockpit-mirrors figure{margin:0;width:31%;max-width:230px}
+.cockpit-mirrors canvas{border:3px solid #162323;border-radius:12px;background:#527b58}
+.cockpit-mirrors figcaption{width:max-content;margin:3px auto 0;background:#162323;color:#eef7ef;padding:2px 7px;border-radius:4px;font-size:clamp(11px,2vw,14px)}
+.mirror-settings{padding:8px 12px;background:#233333}
+.mirror-settings summary{cursor:pointer;padding:5px 0;font-weight:650}
+.mirror-settings-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.mirror-settings fieldset{min-width:0;margin:0;padding:6px 8px;border:1px solid #657772;border-radius:7px}
+.mirror-settings label{display:block;font-size:13px}
+.mirror-settings input{width:100%;margin:4px 0;accent-color:#d6f77b}
+.mirror-settings button{margin-top:8px}
+@media (orientation:landscape) and (pointer:coarse) and (min-width:650px){
+  .cockpit .windshield{max-height:calc(100svh - 110px)}
+}
 </style>
 <main>
 <header><h1>Mô phỏng sa hình</h1><nav aria-label="Chọn bài tập"><button data-mode="parallel" aria-pressed="true">Ghép ngang</button><button data-mode="perpendicular" aria-pressed="false">Ghép dọc</button><button id="zigzag" aria-pressed="false">Hình chữ chi</button></nav></header>
 <div class="game">
-<div class="scene"><canvas id="map" width="760" height="620" aria-label="Sân tập nhìn từ trên xuống. Xe của bạn màu xanh sáng, ô đỗ có nét đứt."></canvas><div id="impact" class="impact" aria-hidden="true" hidden>Va chạm · Xe đã dừng</div></div>
+<div class="scene"><canvas id="map" width="760" height="620" aria-label="Sân tập nhìn từ trên xuống. Xe của bạn màu xanh sáng, ô đỗ có nét đứt."></canvas><div id="cockpit" hidden>
+<div class="cockpit">
+<canvas class="windshield" width="760" height="440" aria-label="Góc nhìn qua kính chắn gió"></canvas>
+<div class="cockpit-mirrors">
+<figure><canvas width="300" height="150" aria-label="Hình phản chiếu bên trái"></canvas><figcaption>Gương trái</figcaption></figure>
+<figure><canvas width="300" height="150" aria-label="Hình phản chiếu bên phải"></canvas><figcaption>Gương phải</figcaption></figure>
+</div></div>
+<details class="mirror-settings">
+<summary>Chỉnh gương</summary>
+<div class="mirror-settings-grid">
+<fieldset><legend>Gương trái</legend><label>Trong ↔ Ngoài<input type="range" min="-8" max="50" value="17"></label><label>Lên ↔ Xuống<input type="range" min="-15" max="26" value="8"></label></fieldset>
+<fieldset><legend>Gương phải</legend><label>Trong ↔ Ngoài<input type="range" min="-8" max="50" value="17"></label><label>Lên ↔ Xuống<input type="range" min="-15" max="26" value="8"></label></fieldset>
+</div>
+<button type="button" data-reset-mirrors>Đặt lại gương</button>
+</details></div>
+<div id="impact" class="impact" aria-hidden="true" hidden>Va chạm · Xe đã dừng</div></div>
 <aside class="panel">
 <section class="card"><h2>Vô lăng và bánh trước</h2>
 <svg class="instrument" viewBox="0 0 240 108" aria-hidden="true">
@@ -69,12 +101,14 @@
 <button class="forward" data-key="ArrowUp" aria-label="Tiến"><span class="touch-label" aria-hidden="true">↑<span>Tiến</span></span><span class="keyboard-label">↑ / W</span></button><button data-key="ArrowLeft" aria-label="Đánh lái trái"><span class="touch-label" aria-hidden="true">←<span>Trái</span></span><span class="keyboard-label">← / A</span></button><button data-key="ArrowDown" aria-label="Lùi"><span class="touch-label" aria-hidden="true">↓<span>Lùi</span></span><span class="keyboard-label">↓ / S</span></button><button data-key="ArrowRight" aria-label="Đánh lái phải"><span class="touch-label" aria-hidden="true">→<span>Phải</span></span><span class="keyboard-label">→ / D</span></button><button class="wide" data-key="Space" aria-label="Phanh"><span class="touch-label" aria-hidden="true">Thắng</span><span class="keyboard-label">Space · Phanh</span></button>
 </div><p class="hint keyboard-label">G để trả lái, Esc để tập lại. Góc lái được giữ khi bạn thả phím.</p><p class="hint touch-label">Giữ đồng thời nút di chuyển và nút đánh lái để vào cua.</p></section>
 <section class="card feedback"><h2 id="lesson">Ghép ngang</h2><div id="zigzag-choices" class="actions" hidden aria-label="Chiều chạy"><button data-mode="zigzagForward" aria-pressed="false">Xuôi</button><button data-mode="zigzagReverse" aria-pressed="false">Ngược</button></div><p id="status" role="status"></p><p class="hint" id="tip"></p></section>
-<div class="actions"><button id="center">Trả lái</button><button id="reset">Tập lại</button><button id="guide" aria-pressed="false">Quỹ đạo</button><button id="alignment" aria-pressed="false">Canh thân xe</button><button id="placement" aria-pressed="false">Dời / xoay xe</button></div>
+<div class="actions"><button id="center">Trả lái</button><button id="reset">Tập lại</button><button id="guide" aria-pressed="false">Quỹ đạo</button><button id="alignment" aria-pressed="false">Canh thân xe</button><button id="cockpit-toggle" aria-pressed="false">Buồng lái</button><button id="placement" aria-pressed="false">Dời / xoay xe</button></div>
 </aside></div></main>
+<script src="./cockpit.js"></script>
 <script>
 'use strict';
 const byId = id => document.getElementById(id);
 const map = byId('map');
+let cockpitEnabled=false;
 const ctx = map.getContext('2d');
 const W = 760, H = 620, parallelLeft = 290, carWidth = 56, carLength = 111, wheelbase = 73;
 const wheelOffset = 26;
@@ -475,6 +509,7 @@ const driveCodes=['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','Space'];
 const aliases={KeyW:'ArrowUp',KeyS:'ArrowDown',KeyA:'ArrowLeft',KeyD:'ArrowRight'};
 addEventListener('keydown',e=>{
   if(e.ctrlKey||e.metaKey||e.altKey||e.shiftKey)return;
+  if(e.target instanceof HTMLInputElement)return;
   if(e.code==='Space'&&e.target instanceof HTMLButtonElement)return;
   const code=aliases[e.code]||e.code;
   if(driveCodes.includes(code)){e.preventDefault();key(code,true,e.code);}
@@ -504,10 +539,26 @@ byId('alignment').onclick=()=>{
   byId('alignment').setAttribute('aria-pressed',showAlignment);
   byId('alignment').blur();
 };
+const cockpitPanel=byId('cockpit');
+const drawCockpit=typeof createCockpit==='function'?createCockpit(cockpitPanel,point,corners):null;
+function setCockpit(enabled){
+  cockpitEnabled=enabled;
+  cockpitPanel.hidden=!enabled;
+  map.hidden=enabled;
+  byId('cockpit-toggle').setAttribute('aria-pressed',enabled);
+  for(const id of ['placement','guide','alignment'])byId(id).hidden=enabled;
+  clearKeys();
+}
+byId('cockpit-toggle').hidden=!drawCockpit;
+byId('cockpit-toggle').onclick=()=>{
+  if(placing)setPlacement(false);
+  setCockpit(!cockpitEnabled);
+  byId('cockpit-toggle').blur();
+};
 byId('placement').onclick=()=>{setPlacement(!placing);byId('placement').blur();};
 reset('parallel');
 let previous=performance.now();
-function frame(now){update(Math.min((now-previous)/1000,.035),now);draw();previous=now;requestAnimationFrame(frame);}
+function frame(now){update(Math.min((now-previous)/1000,.035),now);if(cockpitEnabled)drawCockpit(car,lesson);else draw();previous=now;requestAnimationFrame(frame);}
 requestAnimationFrame(frame);
 </script>
 </html>
