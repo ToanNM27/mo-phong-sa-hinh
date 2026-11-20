@@ -59,10 +59,13 @@ function createCockpit(panel, point, corners) {
     return ground;
   }
 
-  function render(ctx, camera, ground, objects, reflection) {
+  function render(ctx, camera, ground, objects) {
     const {width:w,height:h}=ctx.canvas;
-    const focal=w*(reflection?.52:.63);
-    const horizon=h*(.34-Math.tan(camera.pitch)*1.3);
+    const isMirror=camera.mirror;
+    const focal=w*(isMirror ? .6 : .63);
+    const centerY=h*(isMirror ? .5 : .35);
+    const pitchCos=Math.cos(camera.pitch), pitchSin=Math.sin(camera.pitch);
+    const horizon=centerY-Math.tan(camera.pitch)*focal;
     const cosine=Math.cos(camera.a), sine=Math.sin(camera.a), near=7;
     ctx.fillStyle='#b7d7d4';
     ctx.fillRect(0,0,w,h);
@@ -71,7 +74,11 @@ function createCockpit(panel, point, corners) {
     function polygon(vertices,color) {
       const local=vertices.map(([x,y,z=0])=>{
         const dx=x-camera.x, dy=y-camera.y;
-        return [dx*cosine+dy*sine,dx*sine-dy*cosine,z];
+        const forward=dx*sine-dy*cosine, down=camera.z-z;
+        const right=dx*cosine+dy*sine;
+        // A reflected camera reverses its horizontal axis once, at projection.
+        return [isMirror?-right:right,
+          forward*pitchCos+down*pitchSin,down*pitchCos-forward*pitchSin];
       });
       const visible=[];
       for(let i=0;i<local.length;i++){
@@ -84,8 +91,8 @@ function createCockpit(panel, point, corners) {
       }
       if(visible.length<3)return;
       ctx.beginPath();
-      visible.forEach(([x,d,z],i)=>{
-        const X=w/2+(reflection?-1:1)*x*focal/d, Y=horizon+(camera.z-z)*focal/d;
+      visible.forEach(([x,d,down],i)=>{
+        const X=w/2+x*focal/d, Y=centerY+down*focal/d;
         if(i)ctx.lineTo(X,Y);else ctx.moveTo(X,Y);
       });
       ctx.closePath();
@@ -94,22 +101,22 @@ function createCockpit(panel, point, corners) {
     }
     for(const {vertices,color} of ground)polygon(vertices,color);
     const faces=[];
-    for(const {pose,color,bodyWidth,bodyLength} of objects){
+    for(const {pose,color,bodyWidth,bodyLength,height=32,roofColor='#30494e'} of objects){
       const base=corners(pose,bodyWidth,bodyLength);
-      const roof=base.map(([x,y])=>[x,y,32]);
+      const roof=base.map(([x,y])=>[x,y,height]);
       base.forEach((p,i)=>{
         const j=(i+1)%4;
         const outward=[base[j][1]-p[1],p[0]-base[j][0]];
         if((camera.x-p[0])*outward[0]+(camera.y-p[1])*outward[1]>0)
           faces.push({vertices:[p,base[j],roof[j],roof[i]],color});
       });
-      faces.push({vertices:roof,color:'#30494e'});
+      faces.push({vertices:roof,color:roofColor});
     }
-    const depth=face=>face.vertices.reduce((sum,[x,y])=>
-      sum+(x-camera.x)*sine-(y-camera.y)*cosine,0)/face.vertices.length;
+    const depth=face=>face.vertices.reduce((sum,[x,y,z=0])=>
+      sum+((x-camera.x)*sine-(y-camera.y)*cosine)*pitchCos+(camera.z-z)*pitchSin,0)/face.vertices.length;
     faces.sort((a,b)=>depth(b)-depth(a));
     for(const {vertices,color} of faces)polygon(vertices,color);
-    if(!reflection){
+    if(!isMirror){
       ctx.fillStyle='#273637';
       ctx.beginPath();
       ctx.moveTo(0,h*.85); ctx.quadraticCurveTo(w*.49,h*.72,w,h*.85);
@@ -132,13 +139,17 @@ function createCockpit(panel, point, corners) {
       pose:{x,y,a},color:i?'#b4775d':'#798d9b',bodyWidth:52,bodyLength:106
     }));
     const [x,y]=point(car,-9,-18);
-    render(views[0],{x,y,a:car.a,z:34,pitch:.03},ground,parked,false);
-    const withFlank=[...parked,{pose:car,color:'#62b647',bodyWidth:48,bodyLength:107}];
+    render(views[0],{x,y,a:car.a,z:34,pitch:.03},ground,parked);
+    const withFlank=[...parked,{pose:car,color:'#62b647',bodyWidth:48,bodyLength:107,roofColor:'#427f38'}];
     for(const [i,side] of [-1,1].entries()){
       const [mx,my]=point(car,side*32,-27);
       const yaw=Number(settings[i*2].value)*Math.PI/180;
       const pitch=Number(settings[i*2+1].value)*Math.PI/180;
-      render(views[i+1],{x:mx,y:my,a:car.a+Math.PI-side*yaw,z:29,pitch},ground,withFlank,true);
+      const [tx,ty]=point(car,side*25,36);
+      const tire={pose:{x:tx,y:ty,a:car.a},color:'#182022',roofColor:'#303a39',
+        bodyWidth:10,bodyLength:19,height:13};
+      render(views[i+1],{x:mx,y:my,a:car.a+Math.PI-side*yaw,z:29,pitch,mirror:true},
+        ground,[...withFlank,tire]);
     }
   };
 }

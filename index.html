@@ -83,8 +83,8 @@
 <details class="mirror-settings">
 <summary>Chỉnh gương</summary>
 <div class="mirror-settings-grid">
-<fieldset><legend>Gương trái</legend><label>Trong ↔ Ngoài<input type="range" min="-8" max="50" value="17"></label><label>Lên ↔ Xuống<input type="range" min="-15" max="26" value="8"></label></fieldset>
-<fieldset><legend>Gương phải</legend><label>Trong ↔ Ngoài<input type="range" min="-8" max="50" value="17"></label><label>Lên ↔ Xuống<input type="range" min="-15" max="26" value="8"></label></fieldset>
+<fieldset><legend>Gương trái</legend><label>Trong ↔ Ngoài<input type="range" min="-8" max="42" value="11"></label><label>Lên ↔ Xuống<input type="range" min="-15" max="30" value="16"></label></fieldset>
+<fieldset><legend>Gương phải</legend><label>Trong ↔ Ngoài<input type="range" min="-8" max="42" value="11"></label><label>Lên ↔ Xuống<input type="range" min="-15" max="30" value="16"></label></fieldset>
 </div>
 <button type="button" data-reset-mirrors>Đặt lại gương</button>
 </details></div>
@@ -103,7 +103,7 @@
 <section class="card feedback"><h2 id="lesson">Ghép ngang</h2><div id="zigzag-choices" class="actions" hidden aria-label="Chiều chạy"><button data-mode="zigzagForward" aria-pressed="false">Xuôi</button><button data-mode="zigzagReverse" aria-pressed="false">Ngược</button></div><p id="status" role="status"></p><p class="hint" id="tip"></p></section>
 <div class="actions"><button id="center">Trả lái</button><button id="reset">Tập lại</button><button id="guide" aria-pressed="false">Quỹ đạo</button><button id="alignment" aria-pressed="false">Canh thân xe</button><button id="cockpit-toggle" aria-pressed="false">Buồng lái</button><button id="placement" aria-pressed="false">Dời / xoay xe</button></div>
 </aside></div></main>
-<script src="./cockpit.js"></script>
+<script src="./cockpit.js?v=2"></script>
 <script>
 'use strict';
 const byId = id => document.getElementById(id);
