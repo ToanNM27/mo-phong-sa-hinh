@@ -191,9 +191,9 @@ function createCockpit(panel, point, corners) {
     ctx.fillRect(0,0,w,h);
     function angleAt(u){
       const offset=u-.53, edge=offset<0 ? .53 : .47;
-      const amount=Math.max(0,(Math.abs(offset)-.245)/(edge-.245));
+      const amount=Math.max(0,(Math.abs(offset)-.28)/(edge-.28));
       const rectilinear=Math.atan(offset/.51);
-      return rectilinear+Math.sign(offset)*(Math.PI*.515-Math.atan(edge/.51))*amount**2;
+      return rectilinear+Math.sign(offset)*(Math.PI*.46-Math.atan(edge/.51))*amount**2;
     }
     for(let x=0;x<w;x+=2){
       const stripWidth=Math.min(2,w-x);
@@ -206,7 +206,7 @@ function createCockpit(panel, point, corners) {
       const focal=canvas.width*.63;
       const sourceX=canvas.width*.5+Math.tan(relative)*focal;
       const sourceWidth=Math.max(1,focal*(angleAt(end)-angleAt(start))/Math.cos(relative)**2);
-      const blend=Math.min(1,Math.max(0,(Math.abs(u-.53)-.245)/.16));
+      const blend=Math.min(1,Math.max(0,(Math.abs(u-.53)-.28)/.22));
       const perspective=Math.cos(angle)*(1-blend)+blend;
       const zoom=h*.86/focal*Math.cos(relative)/perspective;
       ctx.drawImage(canvas,sourceX-sourceWidth/2,0,sourceWidth,canvas.height,

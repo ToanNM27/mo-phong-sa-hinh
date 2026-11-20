@@ -132,7 +132,7 @@
 </section>
 </aside></div></main>
 <script src="./course.js?v=3"></script>
-<script src="./cockpit.js?v=8"></script>
+<script src="./cockpit.js?v=9"></script>
 <script>
 'use strict';
 const byId = id => document.getElementById(id);
@@ -159,7 +159,7 @@ const lessons = {
     tip:'Xe bắt đầu ngang xe đỗ phía trên. Khi lùi, đánh phải để đuôi vào ô rồi đánh trái để thân xe song song với lề.'},
   perpendicular: {name:'Ghép dọc', start:[630,376,-Math.PI/2], goal:[442,503,0,86,146],
     pocket:[392,492,425], parked:[], road:[69,736,150,585],
-    tip:'Tiến chếch ra khỏi lề dưới rồi đi qua miệng chuồng về bên trái. Đánh trái khi lùi để đưa đuôi vào chuồng, rồi trả lái theo vạch giữa.'}
+    tip:'Tiến thẳng sát lề dưới tới ngang miệng chuồng, rồi đánh hết lái phải và tiến chếch. Đánh trái khi lùi để đưa đuôi vào chuồng, rồi trả lái theo vạch giữa.'}
 };
 const full=typeof createFullCourse==='function'?createFullCourse({point,corners,line,rect,label}):null;
 if(full)lessons.full={name:'Toàn sa hình',course:full,start:full.start,road:full.road,parked:full.parked,
@@ -538,18 +538,16 @@ function parkingPlan(){
     step('Đưa đầu xe vào ô','Dừng, đánh hết lái trái, rồi lùi đến khi thân xe song song với lề.',
       -radius*angle,-maxTurn);
   }else{
-    const approachY=323;
-    const angle=Math.acos(1-(y-approachY)/(2*radius));
-    step('Tách khỏi lề dưới','Dừng, đánh hết lái phải rồi tiến đến mốc.',
+    const turnAtX=goalX;
+    const angle=Math.asin((1+(turnAtX+wheelbase/2-goalX)/radius)/2);
+    step('Tiến thẳng tới miệng chuồng','Giữ bánh thẳng, tiến sát lề dưới và dừng khi giữa thân xe ngang vạch giữa chuồng.',
+      x-turnAtX,0);
+    step('Đánh hết lái phải','Từ mốc trước miệng chuồng, đánh hết lái phải rồi tiến chếch đến khung nét đứt.',
       radius*angle,maxTurn);
-    step('Cân lại thân xe','Dừng, đánh hết lái trái rồi tiến cho thân xe song song với lề.',
-      radius*angle,-maxTurn);
-    step('Tiến qua miệng chuồng','Trả lái thẳng, tiến đến mốc bên trái ô đỗ.',
-      pose.x-(goalX-wheelbase/2-radius),0);
-    step('Đưa đuôi vào chuồng','Dừng, đánh hết lái trái rồi lùi đến khi xe thẳng theo ô.',
-      -radius*Math.PI/2,-maxTurn);
+    step('Đưa đuôi vào chuồng','Dừng, đánh hết lái trái rồi lùi đến khi thân xe thẳng theo ô.',
+      -radius*(Math.PI/2-angle),-maxTurn);
     step('Lùi thẳng vào ô','Trả lái thẳng, lùi đến khi cả xe vào ô rồi dừng.',
-      -(goalY-(approachY+radius-wheelbase/2)),0);
+      pose.y-goalY,0);
   }
   return steps;
 }
