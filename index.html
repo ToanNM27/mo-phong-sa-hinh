@@ -55,13 +55,9 @@
 
 .cockpit{position:relative;overflow:hidden;background:#253435;aspect-ratio:19/11}
 .scene .cockpit .windshield{width:100%;height:100%;max-height:none}
-.side-window{position:absolute;top:5.5%;bottom:18%;width:21%;background:#263637;overflow:hidden}
-.side-window-left{left:0;clip-path:polygon(0 0,72% 0,100% 95%,0 100%)}
-.side-window-right{right:0;clip-path:polygon(28% 0,100% 0,100% 100%,0 95%)}
-.scene .side-window canvas{height:100%;width:100%;max-height:none;object-fit:fill}
-.side-window::after{content:"";position:absolute;inset:auto 0 0;height:8%;background:#263637;pointer-events:none}
-.cockpit-mirrors{position:absolute;inset:auto 3% 5%;display:flex;align-items:end;justify-content:space-between;pointer-events:none}
-.cockpit-mirrors figure{margin:0;width:30.5%}
+.cockpit-mirrors{position:absolute;inset:auto 3% 23%;display:flex;align-items:end;justify-content:space-between;pointer-events:none}
+.cockpit-mirrors figure{margin:0;width:19%}
+.cockpit-mirrors figure:last-child{width:15%}
 .scene .cockpit-mirrors canvas{width:100%;height:auto;max-height:none;border:2px solid #152121;border-radius:9px;background:#527b58}
 .cockpit-mirrors figcaption{width:max-content;margin:3px auto 0;background:#162323;color:#eef7ef;padding:2px 6px;border-radius:3px;font-size:clamp(11px,1.4vw,14px);line-height:1.15}
 .mirror-settings{padding:7px 10px;background:#213030}
@@ -88,9 +84,7 @@
 <div class="game">
 <div class="scene"><canvas id="map" width="760" height="620" aria-label="Sân tập nhìn từ trên xuống. Xe của bạn màu xanh sáng, ô đỗ có nét đứt."></canvas><div id="cockpit" hidden>
 <div class="cockpit">
-<canvas class="windshield" width="760" height="440" aria-label="Góc nhìn qua kính chắn gió"></canvas>
-<div class="side-window side-window-left"><canvas data-side-window width="180" height="350" aria-label="Cảnh qua cửa sổ hông trái"></canvas></div>
-<div class="side-window side-window-right"><canvas data-side-window width="180" height="350" aria-label="Cảnh qua cửa sổ hông phải"></canvas></div>
+<canvas class="windshield" width="760" height="440" aria-label="Góc nhìn từ ghế lái qua kính trước và hai cửa sổ hông"></canvas>
 <div class="cockpit-mirrors">
 <figure><canvas width="300" height="150" aria-label="Hình phản chiếu bên trái"></canvas><figcaption>Gương trái</figcaption></figure>
 <figure><canvas width="300" height="150" aria-label="Hình phản chiếu bên phải"></canvas><figcaption>Gương phải</figcaption></figure>
@@ -120,8 +114,8 @@
 <section class="card feedback"><h2 id="lesson">Ghép ngang</h2><div id="zigzag-choices" class="actions" hidden aria-label="Chiều chạy"><button data-mode="zigzagForward" aria-pressed="false">Xuôi</button><button data-mode="zigzagReverse" aria-pressed="false">Ngược</button></div><p id="status" role="status"></p><p class="hint" id="tip"></p></section>
 <div class="actions"><button id="center">Trả lái</button><button id="reset">Tập lại</button><button id="guide" aria-pressed="false">Quỹ đạo</button><button id="alignment" aria-pressed="false">Canh thân xe</button><button id="cockpit-toggle" aria-pressed="false">Buồng lái</button><button id="placement" aria-pressed="false">Dời / xoay xe</button></div>
 </aside></div></main>
-<script src="./course.js?v=1"></script>
-<script src="./cockpit.js?v=6"></script>
+<script src="./course.js?v=2"></script>
+<script src="./cockpit.js?v=7"></script>
 <script>
 'use strict';
 const byId = id => document.getElementById(id);
@@ -638,7 +632,7 @@ byId('cockpit-toggle').onclick=()=>{
 byId('placement').onclick=()=>{setPlacement(!placing);byId('placement').blur();};
 reset('parallel');
 let previous=performance.now();
-function frame(now){update(Math.min((now-previous)/1000,.035),now);if(cockpitEnabled)drawCockpit(car,lesson,now);else draw(now);previous=now;requestAnimationFrame(frame);}
+function frame(now){update(Math.min((now-previous)/1000,.035),now);if(cockpitEnabled)drawCockpit(car,lesson,now,steer);else draw(now);previous=now;requestAnimationFrame(frame);}
 requestAnimationFrame(frame);
 </script>
 </html>

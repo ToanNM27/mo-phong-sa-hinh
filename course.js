@@ -6,21 +6,23 @@ function createFullCourse({point,corners,line,rect,label}) {
   const route=[
     [270,1450],[2020,1450],[2020,1210],[1570,1210],[1570,980],
     [2020,980],[2020,750],[1180,750],[1180,460],[1280,365],
-    [1450,365],[1600,498],[1780,498],[1900,365],[1900,160],
-    [640,160],[640,600],[350,600],[350,160],[155,160],[155,930],[1070,930]
+    [1450,365],[1600,498],[1760,515],[1900,413],[1900,290],
+    [640,290],[640,750],[2130,750],[2130,95],[155,95],[155,930],[1070,930]
   ];
   const ground=[], segments=[], centerLine=[];
   const bays=[
     {goal:[787,404,east,86,146],surface:[640,352,875,456]},
     {goal:[632,1020,east,80,156],surface:[532,930,750,1064]}
   ];
-  const parkingApron=[527,300,716,555];
-  const baySurfaces=[parkingApron,...bays.map(bay=>bay.surface)];
+  const parkingApron=[527,300,716,615];
+  const turnApron=[1660,176,1982,353];
+  const baySurfaces=[parkingApron,turnApron,...bays.map(bay=>bay.surface)];
   const pedestrian={x:680,y:1450,a:east};
   const hill={x:1030,y:1450,a:east};
-  const intersection={x:1410,y:750,a:west};
-  const railway={x:350,y:430,a:north};
+  const intersection={x:1325,y:750,a:west};
+  const railway={x:2130,y:422,a:north};
   const finish={x:971,y:930,a:east};
+  const shift={y:95,entry:1780,accelerate:1515,slow:1175};
   const trackLine={x:1510,y:1476,a:east};
   const stages=[
     {name:'Xuất phát', x:390,y:1450, tip:'Cài dây an toàn, bật xi-nhan trái rồi xuất phát. Tắt xi-nhan sau vạch khoảng 5 m.'},
@@ -31,7 +33,7 @@ function createFullCourse({point,corners,line,rect,label}) {
     {name:'Đường vòng chữ S',x:1300,y:365,limit:120,tip:'Đi theo đường cong và tránh chạm vạch biên.'},
     {name:'Ghép dọc',x:787,y:404,limit:120,tip:'Lùi vào chuồng dọc, đưa cả xe vào ô và dừng khi thân xe song song với vạch.'},
     {name:'Dừng trước đường sắt',...railway,tip:'Dừng sát trước vạch trong 0,5 m và giữ động cơ hoạt động.'},
-    {name:'Thay đổi số',x:155,y:544,limit:120,tip:'Chạy số 1 ở đầu đoạn, lên số 2 và đạt 20 km/h. Về số 1, giảm còn tối đa 16 km/h trước cuối đoạn.'},
+    {name:'Thay đổi số',x:shift.accelerate,y:shift.y,limit:120,tip:'Chạy số 1 ở đầu đoạn, lên số 2 và đạt 20 km/h. Về số 1, giảm còn tối đa 16 km/h trước cuối đoạn.'},
     {name:'Ghép ngang',x:632,y:1020,limit:120,tip:'Lùi vào ô ngang, dừng hẳn khi toàn bộ xe nằm trong ô và song song với vạch.'},
     {name:'Kết thúc',...finish,tip:'Bật xi-nhan phải và giữ động cơ hoạt động khi qua vạch kết thúc.'}
   ];
@@ -41,13 +43,13 @@ function createFullCourse({point,corners,line,rect,label}) {
     {x:770,y:1539,text:'ĐI BỘ',type:'warn'},
     {x:1030,y:1539,text:'DỐC',type:'warn'},
     {x:1480,y:1541,text:'VỆT BÁNH',type:'warn'},
-    {x:1410,y:661,text:'ĐÈN',type:'signal'},
+    {x:1325,y:661,text:'ĐÈN',type:'signal'},
     {x:1260,y:470,text:'CHỮ S',type:'warn'},
     {x:795,y:482,text:'P',type:'info'},
-    {x:438,y:430,text:'STOP',type:'stop'},
-    {x:438,y:358,text:'ĐƯỜNG SẮT',type:'warn'},
-    {x:67,y:535,text:'20',type:'speed'},
-    {x:67,y:810,text:'16',type:'speed'},
+    {x:2217,y:422,text:'STOP',type:'stop'},
+    {x:2213,y:494,text:'ĐƯỜNG SẮT',type:'warn'},
+    {x:shift.accelerate,y:17,text:'20',type:'speed'},
+    {x:shift.slow,y:17,text:'16',type:'speed'},
     {x:635,y:1086,text:'P',type:'info'},
     {x:971,y:1024,text:'ĐÍCH',type:'info'}
   ];
@@ -96,6 +98,7 @@ function createFullCourse({point,corners,line,rect,label}) {
       [b[0]+ex-nx,b[1]+ey-ny],[a[0]-ex-nx,a[1]-ey-ny]],'#646a65');
   }
   area(...parkingApron,'#646a65');
+  area(...turnApron,'#646a65');
   for(const {surface} of bays)area(...surface,'#646a65');
   area(955,1382,1198,1518,'#77796f');
   for(let x=965;x<1199;x+=24)stripe([x,1382],[x,1518],1,'#8f9284');
@@ -108,7 +111,10 @@ function createFullCourse({point,corners,line,rect,label}) {
   for(const offset of [-35,-55])crossbar(railway,offset,'#4d4437',6);
   for(let u=-59;u<61;u+=12)stripe(point(railway,u,-29),point(railway,u,-63),3,'#9d9277');
   for(const y of [1464,1488])stripe([1405,y],[1650,y],3,'#f2e9c9');
-  stripe([155,545],[155,805],2.5,'#f6d478');
+  stripe([shift.entry,shift.y],[shift.slow,shift.y],2.5,'#f6d478');
+  for(const x of [shift.entry,shift.accelerate,shift.slow])crossbar({x,y:shift.y,a:west},0,'#edf0cf',3);
+  for(let u=-60;u<=60;u+=15)
+    stripe(point(intersection,u,-12),point(intersection,u,-49),7,'#e5dfce');
   for(const {goal:[x,y,a,w,l]} of bays){
     const box=corners({x,y,a},w,l);
     box.forEach((p,i)=>stripe(p,box[(i+1)%4],4,'#f4cb65'));
@@ -229,7 +235,7 @@ function createFullCourse({point,corners,line,rect,label}) {
         else if(state==='green'&&sub===0)sub=1;
         else if(sub===0){sub=-1;warning(state==='red'?'Đèn đỏ. Dừng trước vạch rồi chờ đèn xanh.':'Đèn vàng. Dừng trước vạch nếu còn an toàn.');}
       }
-      if(sub===1&&car.x<1370&&signal!=='right')warning('Bật xi-nhan phải trước khi rẽ.');
+      if(sub===1&&car.x<1300&&signal!=='right')warning('Bật xi-nhan phải trước khi rẽ.');
       if(sub===1&&inRegion(car,1180,606,105)&&signal==='right')return done();
     }else if(index===5){
       if(ordered([[1190,474,105],[1380,365,105],[1655,498,110],[1870,405,110]]))return done();
@@ -241,9 +247,9 @@ function createFullCourse({point,corners,line,rect,label}) {
         warning('Hãy lùi xe vào ô để hoàn thành bài.');
       }
     }else if(index===8){
-      if(inRegion(car,155,465,65)&&gear===1&&speed>0)sub=Math.max(sub,1);
-      if(sub===1&&inRegion(car,155,650,130)&&car.y>540&&gear===2&&speed>=20/.35)sub=2;
-      if(inRegion(car,155,815,70)&&car.y>=805){
+      if(inRegion(car,shift.entry,shift.y,70)&&gear===1&&speed>0)sub=Math.max(sub,1);
+      if(sub===1&&inRegion(car,shift.accelerate,shift.y,140)&&car.x<shift.entry&&gear===2&&speed>=20/.35)sub=2;
+      if(inRegion(car,shift.slow,shift.y,90)&&car.x<=shift.slow){
         if(sub===2&&gear===1&&speed>=0&&speed<=16/.35)return done();
         warning(sub<2?'Chưa đạt 20 km/h ở số 2. Quay lại đầu đoạn và thử lại.':'Về số 1 và giảm tốc xuống tối đa 16 km/h.');
       }
@@ -275,6 +281,13 @@ function createFullCourse({point,corners,line,rect,label}) {
     centerLine.forEach(([x,y],i)=>i?ctx.lineTo(x,y):ctx.moveTo(x,y));
     ctx.strokeStyle='#b0bab0';ctx.lineWidth=2;ctx.stroke();
     ctx.restore();
+    for(const [x,y,a] of [[830,1450,east],[1790,1450,east],[1700,724,west],
+      [1710,776,east],[2107,564,north],[1660,118,west],[157,575,Math.PI],[355,930,east]]){
+      const pose={x,y,a};
+      const tip=point(pose,0,-15);
+      line(...point(pose,0,14),...tip,'#e3e9da',3);
+      for(const side of [-1,1])line(...point(pose,side*8,-4),...tip,'#e3e9da',3);
+    }
     for(const [i,stage] of stages.entries()){
       const active=i===index;
       const [x,y]=stage.a===undefined?[stage.x,stage.y]:point(stage,-93,0);

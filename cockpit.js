@@ -1,10 +1,14 @@
 'use strict';
 
 function createCockpit(panel, point, corners) {
-  const views = [...panel.querySelectorAll('canvas:not([data-side-window])')]
-    .map(canvas => canvas.getContext('2d'));
-  const sideWindows = [...panel.querySelectorAll('canvas[data-side-window]')]
-    .map(canvas => canvas.getContext('2d'));
+  const views = [...panel.querySelectorAll('canvas')].map(canvas => canvas.getContext('2d'));
+  const yawStep=64*Math.PI/180;
+  const panels=[-yawStep,0,yawStep].map(yaw=>{
+    const canvas=document.createElement('canvas');
+    canvas.width=640;
+    canvas.height=620;
+    return {yaw,canvas,ctx:canvas.getContext('2d')};
+  });
   const settings = [...panel.querySelectorAll('input[type=range]')];
   panel.querySelector('[data-reset-mirrors]').onclick = () => {
     settings.forEach(input => { input.value = input.defaultValue; });
@@ -173,42 +177,93 @@ function createCockpit(panel, point, corners) {
       ctx.fillStyle='#fff';ctx.fillText(sign.text,0,0);
       ctx.restore();
     }
-    if(!isMirror&&!camera.sideWindow){
-      ctx.fillStyle='#253435';
-      ctx.beginPath();
-      ctx.moveTo(0,h*.85);
-      ctx.quadraticCurveTo(w*.5,h*.72,w,h*.85);
-      ctx.lineTo(w,h); ctx.lineTo(0,h); ctx.closePath(); ctx.fill();
-      ctx.fillStyle='#172323';
-      ctx.fillRect(0,0,w,h*.055);
-      ctx.fillStyle='#243333';
-      for(const side of [0,1]){
-        const edge=side*w, inward=side?-1:1;
-        ctx.beginPath();
-        ctx.moveTo(edge+inward*w*.146,0);
-        ctx.lineTo(edge+inward*w*.169,0);
-        ctx.lineTo(edge+inward*w*.224,h*.83);
-        ctx.lineTo(edge+inward*w*.198,h*.83);
-        ctx.closePath();ctx.fill();
-      }
+  }
+
+  function drawPanorama(ctx, eye, ground, objects, signs, signal, steer){
+    const {width:w,height:h}=ctx.canvas;
+    for(const panel of panels){
+      render(panel.ctx,{...eye,a:eye.a+panel.yaw},ground,objects,signs,signal);
     }
+
+    // All three projections share a single eye. Reproject onto a cylinder
+    // to join them into one field of view, with no separate side feeds.
+    ctx.fillStyle='#263637';
+    ctx.fillRect(0,0,w,h);
+    const span=Math.PI;
+    for(let x=0;x<w;x+=2){
+      const stripWidth=Math.min(2,w-x);
+      const angle=((x+stripWidth/2)/w-.53)*span;
+      const index=Math.max(0,Math.min(2,Math.round(angle/yawStep)+1));
+      const {canvas,yaw}=panels[index];
+      const relative=angle-yaw;
+      const focal=canvas.width*.63;
+      const sourceX=canvas.width*.5+Math.tan(relative)*focal;
+      const sourceWidth=Math.max(1,focal*span*stripWidth/w/Math.cos(relative)**2);
+      const zoom=h*.86/focal*Math.cos(relative);
+      ctx.drawImage(canvas,sourceX-sourceWidth/2,0,sourceWidth,canvas.height,
+        x,h*.35-canvas.height*.35*zoom,stripWidth,canvas.height*zoom);
+    }
+
+    ctx.fillStyle='#263637';
+    ctx.beginPath();
+    ctx.moveTo(0,h*.68);ctx.quadraticCurveTo(w*.12,h*.75,w*.22,h*.63);
+    ctx.quadraticCurveTo(w*.55,h*.51,w*.81,h*.64);
+    ctx.quadraticCurveTo(w*.93,h*.71,w,h*.67);
+    ctx.lineTo(w,h);ctx.lineTo(0,h);ctx.closePath();ctx.fill();
+    ctx.fillStyle='#364746';
+    ctx.beginPath();ctx.moveTo(0,h*.76);ctx.lineTo(w*.205,h*.64);
+    ctx.lineTo(w*.205,h*.71);ctx.lineTo(0,h*.90);ctx.closePath();ctx.fill();
+    ctx.beginPath();ctx.moveTo(w,h*.78);ctx.lineTo(w*.80,h*.65);
+    ctx.lineTo(w*.81,h*.71);ctx.lineTo(w,h*.91);ctx.closePath();ctx.fill();
+    ctx.fillStyle='#172323';
+    ctx.beginPath();ctx.moveTo(0,0);ctx.lineTo(w,0);ctx.lineTo(w,h*.12);
+    ctx.quadraticCurveTo(w*.61,-h*.045,0,h*.12);ctx.closePath();ctx.fill();
+    ctx.fillStyle='#303f3e';
+    ctx.beginPath();ctx.moveTo(w*.095,0);ctx.lineTo(w*.164,0);
+    ctx.quadraticCurveTo(w*.158,h*.30,w*.275,h*.615);
+    ctx.lineTo(w*.226,h*.655);ctx.quadraticCurveTo(w*.14,h*.35,w*.095,0);ctx.fill();
+    ctx.beginPath();ctx.moveTo(w*.928,0);ctx.lineTo(w*.967,0);
+    ctx.quadraticCurveTo(w*.93,h*.31,w*.83,h*.68);
+    ctx.lineTo(w*.799,h*.646);ctx.quadraticCurveTo(w*.868,h*.34,w*.928,0);ctx.fill();
+
+    ctx.fillStyle='#172323';
+    ctx.beginPath();ctx.roundRect(w*.29,h*.645,w*.23,h*.13,10);ctx.fill();
+    ctx.fillStyle='#506460';
+    ctx.beginPath();ctx.roundRect(w*.31,h*.663,w*.19,h*.055,5);ctx.fill();
+    ctx.fillStyle='#172323';
+    ctx.beginPath();ctx.roundRect(w*.60,h*.67,w*.15,h*.13,8);ctx.fill();
+    ctx.fillStyle='#374e51';
+    ctx.beginPath();ctx.roundRect(w*.614,h*.685,w*.122,h*.077,4);ctx.fill();
+
+    const radius=h*.205;
+    ctx.save();
+    ctx.translate(w*.405,h*.865);
+    ctx.rotate(steer*2);
+    ctx.strokeStyle='#10191a';
+    ctx.lineWidth=h*.035;
+    ctx.beginPath();ctx.arc(0,0,radius,0,Math.PI*2);ctx.stroke();
+    ctx.strokeStyle='#455451';ctx.lineWidth=h*.008;
+    ctx.beginPath();ctx.arc(0,0,radius+h*.010,0,Math.PI*2);ctx.stroke();
+    ctx.strokeStyle='#182324';ctx.lineWidth=h*.048;
+    ctx.beginPath();ctx.moveTo(-radius,0);ctx.lineTo(radius,0);
+    ctx.moveTo(0,0);ctx.lineTo(0,radius);ctx.stroke();
+    ctx.fillStyle='#263637';
+    ctx.beginPath();ctx.arc(0,0,h*.075,0,Math.PI*2);ctx.fill();
+    ctx.restore();
   }
 
   let lastLesson, ground;
-  return function drawCockpit(car, lesson, now=performance.now()) {
+  return function drawCockpit(car, lesson, now=performance.now(), steer=0) {
     if(lesson!==lastLesson){ground=scene(lesson);lastLesson=lesson;}
     const parked=lesson.parked.map(([x,y,a],i)=>({
       pose:{x,y,a},color:i?'#b4775d':'#798d9b',bodyWidth:52,bodyLength:106
     }));
     const signs=lesson.course?.signs;
     const signal=lesson.course?.light(now);
-    const [x,y]=point(car,-9,-18);
-    render(views[0],{x,y,a:car.a,z:34,pitch:.03},ground,parked,signs,signal);
+    const [x,y]=point(car,-15,-6);
+    drawPanorama(views[0],{x,y,a:car.a,z:34,pitch:.04},ground,parked,signs,signal,steer);
     const withFlank=[...parked,{pose:car,color:'#62b647',bodyWidth:48,bodyLength:107,roofColor:'#427f38',own:true}];
     for(const [i,side] of [-1,1].entries()){
-      const [sx,sy]=point(car,side*19,-10);
-      render(sideWindows[i],{x:sx,y:sy,a:car.a+side*Math.PI/2,z:33,pitch:.08,sideWindow:true},
-        ground,parked,signs,signal);
       const [mx,my]=point(car,side*32,-27);
       const yaw=Number(settings[i*2].value)*Math.PI/180;
       const pitch=Number(settings[i*2+1].value)*Math.PI/180;
