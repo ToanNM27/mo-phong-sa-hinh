@@ -90,8 +90,18 @@
 .parking-flow p{margin-top:4px}
 .parking-flow strong{color:#fff4c1}
 
+.header-actions{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.about-open{background:transparent}
+.about{max-width:min(440px,calc(100vw - 32px));background:#1b2728;color:#f1f7ee;border:1px solid #445659;border-radius:14px;padding:18px}
+.about::backdrop{background:#050b0cb3}
+.about ul{margin:12px 0 16px;padding-left:20px;line-height:1.5}
+.about li+li{margin-top:6px}
+.about a{color:#d6f77b;overflow-wrap:anywhere}
+.about form{display:flex;justify-content:flex-end}
+
 @media(max-width:800px),(pointer:coarse){
-  header nav{display:grid;grid-template-columns:repeat(3,minmax(0,1fr))}
+  header .header-actions{width:100%}
+  header nav{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));flex:1}
   header nav button,.game-actions button,.mirror-settings button{touch-action:manipulation}
   .panel{min-width:0}
   .panel .game-actions{
@@ -115,7 +125,16 @@
 }
 </style>
 <main>
-<header><h1>Mô phỏng sa hình</h1><nav aria-label="Chọn bài tập"><button data-mode="parallel" aria-pressed="true">Ghép ngang</button><button data-mode="perpendicular" aria-pressed="false">Ghép dọc</button><button id="zigzag" aria-pressed="false">Hình chữ chi</button></nav></header>
+<header><h1>Mô phỏng sa hình</h1><div class="header-actions"><nav aria-label="Chọn bài tập"><button data-mode="parallel" aria-pressed="true">Ghép ngang</button><button data-mode="perpendicular" aria-pressed="false">Ghép dọc</button><button id="zigzag" aria-pressed="false">Hình chữ chi</button></nav><button type="button" id="about-open" class="about-open" aria-haspopup="dialog">Giới thiệu</button></div></header>
+<dialog id="about" class="about" aria-labelledby="about-title">
+<h2 id="about-title">Giới thiệu</h2>
+<ul>
+<li>Ủng hộ mình 1 tim 1 follow nha: <a href="https://vt.tiktok.com/ZSs6LPgG5/" target="_blank" rel="noopener">TikTok</a></li>
+<li>Liên hệ cho công việc: <a href="https://t.me/toannm27" target="_blank" rel="noopener">t.me/toannm27</a></li>
+<li>LinkedIn: <a href="https://www.linkedin.com/in/to%C3%A0n-nguy%E1%BB%85n-566882231" target="_blank" rel="noopener">Toàn Nguyễn</a></li>
+</ul>
+<form method="dialog"><button>Đóng</button></form>
+</dialog>
 <div class="game" id="game">
 <div class="scene"><canvas id="map" width="760" height="620" aria-label="Sân tập nhìn từ trên xuống. Xe của bạn màu xanh sáng, ô đỗ có nét đứt."></canvas><div id="cockpit" hidden>
 <div class="cockpit">
@@ -147,7 +166,7 @@
 <button data-course-control="belt" title="Phím B" aria-pressed="false">Dây an toàn</button><button data-course-control="left" title="Phím Q" aria-pressed="false">Xi-nhan trái</button><button data-course-control="right" title="Phím E" aria-pressed="false">Xi-nhan phải</button><button data-course-control="gear" title="Phím F">Số 1</button><button data-course-control="engine" title="Phím I" aria-pressed="true">Máy đang bật</button>
 </div><p class="hint keyboard-label">G để trả lái, Esc để tập lại. Góc lái được giữ khi bạn thả phím.</p><p class="hint touch-label">Giữ đồng thời nút di chuyển và nút đánh lái để vào cua.</p></section>
 <section class="card feedback"><h2 id="lesson">Ghép ngang</h2><div id="zigzag-choices" class="actions" hidden aria-label="Chiều chạy"><button data-mode="zigzagForward" aria-pressed="false">Xuôi</button><button data-mode="zigzagReverse" aria-pressed="false">Ngược</button></div><p id="status" role="status"></p><p class="hint" id="tip"></p></section>
-<div class="actions game-actions" id="game-actions"><button id="center">Trả lái</button><button id="reset">Tập lại</button><button id="guide" aria-pressed="false">Quỹ đạo</button><button id="alignment" aria-pressed="false">Canh thân xe</button><button id="parking-flow-toggle" aria-pressed="false">Hướng dẫn từng bước</button><button id="cockpit-toggle" aria-pressed="false">Buồng lái</button><button id="placement" aria-pressed="false">Dời / xoay xe</button></div>
+<div class="actions game-actions" id="game-actions"><button id="center">Trả lái</button><button id="reset">Tập lại</button><button id="guide" aria-pressed="false">Quỹ đạo</button><button id="alignment" aria-pressed="false">Canh thân xe</button><button id="parking-flow-toggle" aria-pressed="false">Hướng dẫn từng bước</button><button data-flow="car" aria-pressed="false" hidden>Gợi ý: song song xe trên</button><button data-flow="bay" aria-pressed="false" hidden>Gợi ý: song song ô đỗ</button><button id="cockpit-toggle" aria-pressed="false">Buồng lái</button><button id="placement" aria-pressed="false">Dời / xoay xe</button></div>
 <section id="placement-settings" class="card placement-settings" hidden><div class="placement-title"><h2>Góc thân xe</h2><output id="placement-angle">360°</output></div><p class="hint">360° hướng lên, góc tăng theo chiều kim đồng hồ.</p><div class="placement-presets"><button type="button" data-heading="45" aria-pressed="false">45°</button><button type="button" data-heading="90" aria-pressed="false">90°</button><button type="button" data-heading="180" aria-pressed="false">180°</button><button type="button" data-heading="225" aria-pressed="false">225°</button><button type="button" data-heading="270" aria-pressed="false">270°</button><button type="button" data-heading="315" aria-pressed="false">315°</button><button type="button" data-heading="360" aria-pressed="false">360°</button></div></section>
 <section class="card parking-flow" id="parking-flow" hidden aria-label="Hướng dẫn ghép xe">
 <h2 id="parking-flow-title"></h2>
@@ -178,7 +197,7 @@ const lessons = {
     tip:'Dùng W hoặc ↑ để chạy tiến từ trái sang phải, giữ cả xe giữa hai vạch gấp khúc.'},
   zigzagReverse: {...slalom, name:'Hình chữ chi', start:[681,328,Math.PI/2], finish:155,
     tip:'Dùng S hoặc ↓ để chạy lùi từ phải sang trái, giữ cả xe giữa hai vạch gấp khúc.'},
-  parallel: {name:'Ghép ngang', start:[516,162,0], goal:[608,328,0,78,156],
+  parallel: {name:'Ghép ngang', start:[516,162,0], bayStart:[516,274,0], goal:[608,328,0,78,156],
     parked:[[608,162,0],[608,489,0]], road:[parallelLeft+12,656,14,606],
     tip:'Xe bắt đầu ngang xe đỗ phía trên. Khi lùi, đánh phải để đuôi vào ô rồi đánh trái để thân xe song song với lề.'},
   perpendicular: {name:'Ghép dọc', start:[630,376,-Math.PI/2], goal:[442,503,0,86,146],
@@ -193,7 +212,11 @@ const headingButtons=[...document.querySelectorAll('[data-heading]')];
 const clamp = (n,min,max) => Math.max(min,Math.min(max,n));
 const parkingAngleLimit = Math.sin(4*Math.PI/180);
 let placing=false, placementDrag=null, placementBlocked=false;
-let flowEnabled=false, flowSteps=[], flowIndex=0;
+let flowEnabled=false, flowVariant='car', flowSteps=[], flowIndex=0;
+const flowButtons=[...document.querySelectorAll('[data-flow]')];
+function startPose(){
+  return mode==='parallel'&&flowEnabled&&flowVariant==='bay'?lesson.bayStart:lesson.start;
+}
 let mode, lesson, car, steer, speed, won, showGuide = false, showAlignment = false, bumpUntil, impact;
 function reset(next = mode) {
   mode=next;
@@ -205,7 +228,7 @@ function reset(next = mode) {
   }
   const mapWidth=mode==='parallel'?W-parallelLeft:W;
   if(byId('map').width!==mapWidth)byId('map').width=mapWidth;
-  const [x,y,a]=lesson.start;
+  const [x,y,a]=startPose();
   car={x,y,a};
   steer=speed=bumpUntil=0;
   won=false;
@@ -539,7 +562,7 @@ function clearKeys(){
   buttons.forEach(b=>b.classList.remove('held'));
 }
 function parkingPlan(){
-  const [x,y,a]=lesson.start;
+  const [x,y,a]=startPose();
   const [goalX,goalY]=lesson.goal;
   const maxTurn=.64, radius=wheelbase/Math.tan(maxTurn);
   const steps=[];
@@ -553,7 +576,15 @@ function parkingPlan(){
     }
     steps.push({title,command,distance,angle,samples,target:pose});
   }
-  if(mode==='parallel'){
+  if(mode==='parallel'&&flowVariant==='bay'){
+    const angle=55*Math.PI/180;
+    step('Đánh lái trái, tiến chếch lên','Xe đang song song ô đỗ. Dừng, đánh hết lái trái rồi tiến chậm đến khung nét đứt.',
+      radius*angle,-maxTurn);
+    step('Lùi thẳng về phía ô','Trả thẳng lái, lùi đến khi bánh sau bên trái gần chạm vạch trái của ô.',
+      -(goalX-x)/Math.sin(angle),0);
+    step('Đưa đuôi xe vào ô','Dừng, đánh hết lái trái rồi lùi đến khi thân xe song song với lề.',
+      -radius*angle,-maxTurn);
+  }else if(mode==='parallel'){
     const angle=Math.acos(1-(goalX-x)/(2*radius));
     step('Căn ngang xe đỗ phía trước','Trả lái thẳng và nhích đến khung nét đứt.',
       y-(goalY-2*radius*Math.sin(angle)),0);
@@ -579,8 +610,13 @@ function resetParkingFlow(){
   flowIndex=0;
   if(!lesson.goal)flowEnabled=false;
   flowSteps=flowEnabled?parkingPlan():[];
-  byId('parking-flow-toggle').hidden=!lesson.goal;
+  const parallel=mode==='parallel';
+  byId('parking-flow-toggle').hidden=!lesson.goal||parallel;
   byId('parking-flow-toggle').setAttribute('aria-pressed',flowEnabled);
+  for(const button of flowButtons){
+    button.hidden=!parallel;
+    button.setAttribute('aria-pressed',flowEnabled&&flowVariant===button.dataset.flow);
+  }
   byId('parking-flow').hidden=!flowEnabled;
   if(flowEnabled)updateParkingFlow(false);
 }
@@ -650,6 +686,21 @@ byId('parking-flow-toggle').onclick=()=>{
   flowEnabled=!flowEnabled;
   resetParkingFlow();
   byId('parking-flow-toggle').blur();
+};
+for(const button of flowButtons)button.onclick=()=>{
+  if(flowEnabled&&flowVariant===button.dataset.flow){
+    flowEnabled=false;
+    resetParkingFlow();
+  }else{
+    flowEnabled=true;
+    flowVariant=button.dataset.flow;
+    reset();
+  }
+  button.blur();
+};
+byId('about-open').onclick=()=>{
+  clearKeys();
+  byId('about').showModal();
 };
 function setPlacement(enabled){
   placing=enabled;
@@ -758,7 +809,7 @@ const driveCodes=['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','Space'];
 const aliases={KeyW:'ArrowUp',KeyS:'ArrowDown',KeyA:'ArrowLeft',KeyD:'ArrowRight'};
 addEventListener('keydown',e=>{
   if(e.ctrlKey||e.metaKey||e.altKey||e.shiftKey)return;
-  if(e.target instanceof HTMLInputElement)return;
+  if(e.target instanceof HTMLInputElement||byId('about').open)return;
   if(lesson.course&&courseKeys[e.code]&&!e.repeat){e.preventDefault();applyCourseControl(courseKeys[e.code]);}
   if(e.code==='Space'&&e.target instanceof HTMLButtonElement)return;
   const code=aliases[e.code]||e.code;
