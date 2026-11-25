@@ -56,8 +56,8 @@
 .cockpit{position:relative;overflow:hidden;background:#253435;aspect-ratio:19/11}
 .scene .cockpit .windshield{width:100%;height:100%;max-height:none}
 .cockpit-mirrors{position:absolute;inset:auto .6% .8% 1.5%;display:flex;align-items:end;justify-content:space-between;pointer-events:none}
-.cockpit-mirrors figure{position:relative;margin:0;width:21.3%}
-.cockpit-mirrors figure:last-child{width:17.4%}
+.cockpit-mirrors figure{position:relative;margin:0;width:25%}
+.cockpit-mirrors figure:last-child{width:21.1%}
 .scene .cockpit-mirrors canvas{width:100%;height:auto;max-height:none;border:2px solid #152121;border-radius:9px;background:#527b58}
 .cockpit-mirrors figcaption{position:absolute;left:50%;bottom:3px;transform:translateX(-50%);width:max-content;background:#162323e6;color:#eef7ef;padding:1px 5px;border-radius:3px;font-size:clamp(10px,1.2vw,12px);line-height:1.15}
 .mirror-settings{padding:7px 10px;background:#213030}
@@ -74,6 +74,21 @@
 #course-controls{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
 #course-controls button{flex:1;min-height:44px;padding:5px 7px;font-size:14px}
 .course-warning{color:#ffd27c!important}
+.park-badge{position:absolute;top:12px;left:50%;transform:translateX(-50%);padding:8px 14px;border-radius:8px;background:#2f6d2a;color:#fff;font-weight:750;white-space:nowrap;pointer-events:none;box-shadow:0 2px 10px #0008}
+.park-badge.ok{background:#d6f77b;color:#152516}
+.park-badge.warn{background:#8a6418}
+@media (orientation:portrait) and (max-width:800px){
+  .cockpit{aspect-ratio:auto}
+  .scene .cockpit .windshield{height:auto}
+  .cockpit-mirrors{position:static;gap:6px;padding:6px;background:#152121}
+  .cockpit-mirrors figure{flex:320 1 0;width:auto}
+  .cockpit-mirrors figure:last-child{flex:270 1 0;width:auto}
+  .park-badge{top:8px;font-size:14px;padding:6px 10px}
+}
+@media (orientation:landscape) and (pointer:coarse){
+  .cockpit-mirrors figure{width:28%}
+  .cockpit-mirrors figure:last-child{width:23.6%}
+}
 @media(max-width:480px){
   header nav{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}
   #course-controls button{flex-basis:calc(50% - 6px)}
@@ -130,7 +145,7 @@
 <h2 id="about-title">Giới thiệu</h2>
 <ul>
 <li>Ủng hộ mình 1 tim 1 follow nha: <a href="https://vt.tiktok.com/ZSs6LPgG5/" target="_blank" rel="noopener">TikTok</a></li>
-<li>Liên hệ cho công việc: <a href="https://t.me/toannm27" target="_blank" rel="noopener">t.me/toannm27</a></li>
+<li>Liên hệ và góp ý: <a href="https://t.me/toannm27" target="_blank" rel="noopener">t.me/toannm27</a></li>
 <li>LinkedIn: <a href="https://www.linkedin.com/in/to%C3%A0n-nguy%E1%BB%85n-566882231" target="_blank" rel="noopener">Toàn Nguyễn</a></li>
 </ul>
 <form method="dialog"><button>Đóng</button></form>
@@ -151,7 +166,7 @@
 </div>
 <button type="button" data-reset-mirrors>Đặt lại gương</button>
 </details></div>
-<div id="impact" class="impact" aria-hidden="true" hidden>Va chạm · Xe đã dừng</div></div>
+<div id="impact" class="impact" aria-hidden="true" hidden>Va chạm · Xe đã dừng</div><div id="park-badge" class="park-badge" role="status" hidden></div></div>
 <aside class="panel" id="game-panel">
 <section class="card"><h2>Vô lăng và bánh trước</h2>
 <svg class="instrument" viewBox="0 0 240 108" aria-hidden="true">
@@ -534,6 +549,7 @@ function update(dt,now) {
   const aligned=inside && Math.abs(Math.sin(car.a-lesson.goal[2]))<=parkingAngleLimit;
   const collision=now<bumpUntil && (!won||lesson.goal);
   if(lesson.goal)won=Boolean(!placing && aligned && !speed && !collision);
+  updateParkBadge(inside,aligned,collision);
   if(flowEnabled&&flowSteps.length)updateParkingFlow(collision);
   byId('impact').hidden=!collision;
   byId('map').parentElement.classList.toggle('collision',collision);
@@ -549,6 +565,19 @@ function update(dt,now) {
   else if(aligned)setStatus('Xe đã thẳng trong ô. Hãy dừng hẳn.');
   else if(inside)setStatus('Xe đã nằm trong ô. Chỉnh thân xe song song với vạch (lệch tối đa 4°).');
   else setStatus('Đưa cả xe vào ô, chỉnh thân xe song song với vạch rồi dừng hẳn.');
+}
+let wasAligned=false;
+function updateParkBadge(inside,aligned,collision){
+  const badge=byId('park-badge');
+  const show=cockpitEnabled&&lesson.goal&&inside&&!placing&&!collision;
+  const message=!show?'':won?'✓ Đỗ hợp lệ':aligned?'✓ Đã hợp lệ · Dừng xe!':'Đã vào ô · Chỉnh thẳng thân xe';
+  badge.hidden=!show;
+  if(badge.textContent!==message)badge.textContent=message;
+  badge.classList.toggle('ok',show&&aligned);
+  badge.classList.toggle('warn',show&&!aligned);
+  const nowAligned=show&&aligned;
+  if(nowAligned&&!wasAligned&&navigator.vibrate)navigator.vibrate(80);
+  wasAligned=nowAligned;
 }
 function key(code,pressed,source){
   if(pressed)input.set(source,code);else input.delete(source);
