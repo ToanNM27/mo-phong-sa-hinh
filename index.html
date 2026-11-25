@@ -10,6 +10,7 @@
 
 .touch-label{display:none}
 .keys button{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+header,.game{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;-webkit-tap-highlight-color:transparent}
 @media(max-width:800px),(pointer:coarse){
   main{padding:max(10px,env(safe-area-inset-top)) max(10px,env(safe-area-inset-right)) max(14px,env(safe-area-inset-bottom)) max(10px,env(safe-area-inset-left))}
   header{margin-bottom:8px;gap:8px}
@@ -737,6 +738,10 @@ for(const button of flowButtons)button.onclick=()=>{
   }
   button.blur();
 };
+// Long-pressing a control must not open the browser's copy/translate menu.
+for(const area of [document.querySelector('header'),byId('game')])
+  for(const type of ['contextmenu','selectstart'])
+    area.addEventListener(type,e=>e.preventDefault());
 byId('about-open').onclick=()=>{
   clearKeys();
   byId('about').showModal();
