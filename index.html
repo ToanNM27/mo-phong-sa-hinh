@@ -10,6 +10,7 @@
 
 .touch-label{display:none}
 .keys button{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+header,.game{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;-webkit-tap-highlight-color:transparent}
 @media(max-width:800px),(pointer:coarse){
   main{padding:max(10px,env(safe-area-inset-top)) max(10px,env(safe-area-inset-right)) max(14px,env(safe-area-inset-bottom)) max(10px,env(safe-area-inset-left))}
   header{margin-bottom:8px;gap:8px}
@@ -56,8 +57,8 @@
 .cockpit{position:relative;overflow:hidden;background:#253435;aspect-ratio:19/11}
 .scene .cockpit .windshield{width:100%;height:100%;max-height:none}
 .cockpit-mirrors{position:absolute;inset:auto .6% .8% 1.5%;display:flex;align-items:end;justify-content:space-between;pointer-events:none}
-.cockpit-mirrors figure{position:relative;margin:0;width:21.3%}
-.cockpit-mirrors figure:last-child{width:17.4%}
+.cockpit-mirrors figure{position:relative;margin:0;width:25%}
+.cockpit-mirrors figure:last-child{width:21.1%}
 .scene .cockpit-mirrors canvas{width:100%;height:auto;max-height:none;border:2px solid #152121;border-radius:9px;background:#527b58}
 .cockpit-mirrors figcaption{position:absolute;left:50%;bottom:3px;transform:translateX(-50%);width:max-content;background:#162323e6;color:#eef7ef;padding:1px 5px;border-radius:3px;font-size:clamp(10px,1.2vw,12px);line-height:1.15}
 .mirror-settings{padding:7px 10px;background:#213030}
@@ -74,6 +75,21 @@
 #course-controls{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
 #course-controls button{flex:1;min-height:44px;padding:5px 7px;font-size:14px}
 .course-warning{color:#ffd27c!important}
+.park-badge{position:absolute;top:12px;left:50%;transform:translateX(-50%);padding:8px 14px;border-radius:8px;background:#2f6d2a;color:#fff;font-weight:750;white-space:nowrap;pointer-events:none;box-shadow:0 2px 10px #0008}
+.park-badge.ok{background:#d6f77b;color:#152516}
+.park-badge.warn{background:#8a6418}
+@media (orientation:portrait) and (max-width:800px){
+  .cockpit{aspect-ratio:auto}
+  .scene .cockpit .windshield{height:auto}
+  .cockpit-mirrors{position:static;gap:6px;padding:6px;background:#152121}
+  .cockpit-mirrors figure{flex:320 1 0;width:auto}
+  .cockpit-mirrors figure:last-child{flex:270 1 0;width:auto}
+  .park-badge{top:8px;font-size:14px;padding:6px 10px}
+}
+@media (orientation:landscape) and (pointer:coarse){
+  .cockpit-mirrors figure{width:28%}
+  .cockpit-mirrors figure:last-child{width:23.6%}
+}
 @media(max-width:480px){
   header nav{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}
   #course-controls button{flex-basis:calc(50% - 6px)}
@@ -90,17 +106,36 @@
 .parking-flow p{margin-top:4px}
 .parking-flow strong{color:#fff4c1}
 
+.header-actions{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.flow-choices{grid-column:1/-1;display:grid;gap:6px;padding:9px;border:1px solid #354747;border-radius:12px;background:#1b2728}
+.flow-choices span{font-size:13px;font-weight:650;color:#bbceca}
+.flow-choices div{display:grid;gap:6px}
+.game-actions button{flex:1 1 calc(50% - 4px);min-width:0;min-height:40px}
+.flow-choices button{min-height:44px;padding:6px;font-size:14px}
+.about-open{background:transparent}
+.about{max-width:min(440px,calc(100vw - 32px));background:#1b2728;color:#f1f7ee;border:1px solid #445659;border-radius:14px;padding:18px}
+.about::backdrop{background:#050b0cb3}
+.about ul{margin:12px 0 16px;padding-left:20px;line-height:1.5}
+.about li+li{margin-top:6px}
+.about a{color:#d6f77b;overflow-wrap:anywhere}
+.about form{display:flex;justify-content:flex-end}
+
 @media(max-width:800px),(pointer:coarse){
-  header nav{display:grid;grid-template-columns:repeat(3,minmax(0,1fr))}
+  header .header-actions{width:100%}
+  header nav{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));flex:1}
   header nav button,.game-actions button,.mirror-settings button{touch-action:manipulation}
   .panel{min-width:0}
   .panel .game-actions{
-    display:grid;
-    grid-template-columns:repeat(2,minmax(0,1fr));
+    display:flex;
+    flex-wrap:wrap;
+    gap:8px;
     grid-column:1/-1;
     grid-row:2;
   }
-  .game-actions button{min-width:0;min-height:44px;padding:7px 5px;overflow-wrap:anywhere}
+  .game-actions button{flex:1 1 calc(50% - 4px);min-width:0;min-height:44px;padding:7px 5px}
+  .panel .flow-choices{grid-row:3}
+  .flow-choices div{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .flow-choices button{touch-action:manipulation}
   #cockpit-toggle{order:-1}
   .cockpit-mirrors figcaption{
     width:1px;height:1px;padding:0;overflow:hidden;clip-path:inset(50%);white-space:nowrap;
@@ -115,7 +150,16 @@
 }
 </style>
 <main>
-<header><h1>Mô phỏng sa hình</h1><nav aria-label="Chọn bài tập"><button data-mode="parallel" aria-pressed="true">Ghép ngang</button><button data-mode="perpendicular" aria-pressed="false">Ghép dọc</button><button id="zigzag" aria-pressed="false">Hình chữ chi</button></nav></header>
+<header><h1>Mô phỏng sa hình</h1><div class="header-actions"><nav aria-label="Chọn bài tập"><button data-mode="parallel" aria-pressed="true">Ghép ngang</button><button data-mode="perpendicular" aria-pressed="false">Ghép dọc</button><button id="zigzag" aria-pressed="false">Hình chữ chi</button></nav><button type="button" id="about-open" class="about-open" aria-haspopup="dialog">Giới thiệu</button></div></header>
+<dialog id="about" class="about" aria-labelledby="about-title">
+<h2 id="about-title">Giới thiệu</h2>
+<ul>
+<li>Ủng hộ mình 1 tim 1 follow nha: <a href="https://vt.tiktok.com/ZSs6LPgG5/" target="_blank" rel="noopener">TikTok</a></li>
+<li>Liên hệ và góp ý: <a href="https://t.me/toannm27" target="_blank" rel="noopener">t.me/toannm27</a></li>
+<li>LinkedIn: <a href="https://www.linkedin.com/in/to%C3%A0n-nguy%E1%BB%85n-566882231" target="_blank" rel="noopener">Toàn Nguyễn</a></li>
+</ul>
+<form method="dialog"><button>Đóng</button></form>
+</dialog>
 <div class="game" id="game">
 <div class="scene"><canvas id="map" width="760" height="620" aria-label="Sân tập nhìn từ trên xuống. Xe của bạn màu xanh sáng, ô đỗ có nét đứt."></canvas><div id="cockpit" hidden>
 <div class="cockpit">
@@ -132,7 +176,7 @@
 </div>
 <button type="button" data-reset-mirrors>Đặt lại gương</button>
 </details></div>
-<div id="impact" class="impact" aria-hidden="true" hidden>Va chạm · Xe đã dừng</div></div>
+<div id="impact" class="impact" aria-hidden="true" hidden>Va chạm · Xe đã dừng</div><div id="park-badge" class="park-badge" role="status" hidden></div></div>
 <aside class="panel" id="game-panel">
 <section class="card"><h2>Vô lăng và bánh trước</h2>
 <svg class="instrument" viewBox="0 0 240 108" aria-hidden="true">
@@ -148,6 +192,7 @@
 </div><p class="hint keyboard-label">G để trả lái, Esc để tập lại. Góc lái được giữ khi bạn thả phím.</p><p class="hint touch-label">Giữ đồng thời nút di chuyển và nút đánh lái để vào cua.</p></section>
 <section class="card feedback"><h2 id="lesson">Ghép ngang</h2><div id="zigzag-choices" class="actions" hidden aria-label="Chiều chạy"><button data-mode="zigzagForward" aria-pressed="false">Xuôi</button><button data-mode="zigzagReverse" aria-pressed="false">Ngược</button></div><p id="status" role="status"></p><p class="hint" id="tip"></p></section>
 <div class="actions game-actions" id="game-actions"><button id="center">Trả lái</button><button id="reset">Tập lại</button><button id="guide" aria-pressed="false">Quỹ đạo</button><button id="alignment" aria-pressed="false">Canh thân xe</button><button id="parking-flow-toggle" aria-pressed="false">Hướng dẫn từng bước</button><button id="cockpit-toggle" aria-pressed="false">Buồng lái</button><button id="placement" aria-pressed="false">Dời / xoay xe</button></div>
+<div class="flow-choices" id="flow-choices" role="group" aria-labelledby="flow-choices-title" hidden><span id="flow-choices-title">Hướng dẫn ghép ngang từng bước</span><div><button data-flow="car" aria-pressed="false">Song song xe trên</button><button data-flow="bay" aria-pressed="false">Song song ô đỗ</button></div></div>
 <section id="placement-settings" class="card placement-settings" hidden><div class="placement-title"><h2>Góc thân xe</h2><output id="placement-angle">360°</output></div><p class="hint">360° hướng lên, góc tăng theo chiều kim đồng hồ.</p><div class="placement-presets"><button type="button" data-heading="45" aria-pressed="false">45°</button><button type="button" data-heading="90" aria-pressed="false">90°</button><button type="button" data-heading="180" aria-pressed="false">180°</button><button type="button" data-heading="225" aria-pressed="false">225°</button><button type="button" data-heading="270" aria-pressed="false">270°</button><button type="button" data-heading="315" aria-pressed="false">315°</button><button type="button" data-heading="360" aria-pressed="false">360°</button></div></section>
 <section class="card parking-flow" id="parking-flow" hidden aria-label="Hướng dẫn ghép xe">
 <h2 id="parking-flow-title"></h2>
@@ -178,7 +223,7 @@ const lessons = {
     tip:'Dùng W hoặc ↑ để chạy tiến từ trái sang phải, giữ cả xe giữa hai vạch gấp khúc.'},
   zigzagReverse: {...slalom, name:'Hình chữ chi', start:[681,328,Math.PI/2], finish:155,
     tip:'Dùng S hoặc ↓ để chạy lùi từ phải sang trái, giữ cả xe giữa hai vạch gấp khúc.'},
-  parallel: {name:'Ghép ngang', start:[516,162,0], goal:[608,328,0,78,156],
+  parallel: {name:'Ghép ngang', start:[516,162,0], bayStart:[516,274,0], goal:[608,328,0,78,156],
     parked:[[608,162,0],[608,489,0]], road:[parallelLeft+12,656,14,606],
     tip:'Xe bắt đầu ngang xe đỗ phía trên. Khi lùi, đánh phải để đuôi vào ô rồi đánh trái để thân xe song song với lề.'},
   perpendicular: {name:'Ghép dọc', start:[630,376,-Math.PI/2], goal:[442,503,0,86,146],
@@ -193,7 +238,11 @@ const headingButtons=[...document.querySelectorAll('[data-heading]')];
 const clamp = (n,min,max) => Math.max(min,Math.min(max,n));
 const parkingAngleLimit = Math.sin(4*Math.PI/180);
 let placing=false, placementDrag=null, placementBlocked=false;
-let flowEnabled=false, flowSteps=[], flowIndex=0;
+let flowEnabled=false, flowVariant='car', flowSteps=[], flowIndex=0;
+const flowButtons=[...document.querySelectorAll('[data-flow]')];
+function startPose(){
+  return mode==='parallel'&&flowEnabled&&flowVariant==='bay'?lesson.bayStart:lesson.start;
+}
 let mode, lesson, car, steer, speed, won, showGuide = false, showAlignment = false, bumpUntil, impact;
 function reset(next = mode) {
   mode=next;
@@ -205,7 +254,7 @@ function reset(next = mode) {
   }
   const mapWidth=mode==='parallel'?W-parallelLeft:W;
   if(byId('map').width!==mapWidth)byId('map').width=mapWidth;
-  const [x,y,a]=lesson.start;
+  const [x,y,a]=startPose();
   car={x,y,a};
   steer=speed=bumpUntil=0;
   won=false;
@@ -511,6 +560,7 @@ function update(dt,now) {
   const aligned=inside && Math.abs(Math.sin(car.a-lesson.goal[2]))<=parkingAngleLimit;
   const collision=now<bumpUntil && (!won||lesson.goal);
   if(lesson.goal)won=Boolean(!placing && aligned && !speed && !collision);
+  updateParkBadge(inside,aligned,collision);
   if(flowEnabled&&flowSteps.length)updateParkingFlow(collision);
   byId('impact').hidden=!collision;
   byId('map').parentElement.classList.toggle('collision',collision);
@@ -527,6 +577,19 @@ function update(dt,now) {
   else if(inside)setStatus('Xe đã nằm trong ô. Chỉnh thân xe song song với vạch (lệch tối đa 4°).');
   else setStatus('Đưa cả xe vào ô, chỉnh thân xe song song với vạch rồi dừng hẳn.');
 }
+let wasAligned=false;
+function updateParkBadge(inside,aligned,collision){
+  const badge=byId('park-badge');
+  const show=cockpitEnabled&&lesson.goal&&inside&&!placing&&!collision;
+  const message=!show?'':won?'✓ Đỗ hợp lệ':aligned?'✓ Đã hợp lệ · Dừng xe!':'Đã vào ô · Chỉnh thẳng thân xe';
+  badge.hidden=!show;
+  if(badge.textContent!==message)badge.textContent=message;
+  badge.classList.toggle('ok',show&&aligned);
+  badge.classList.toggle('warn',show&&!aligned);
+  const nowAligned=show&&aligned;
+  if(nowAligned&&!wasAligned&&navigator.vibrate)navigator.vibrate(80);
+  wasAligned=nowAligned;
+}
 function key(code,pressed,source){
   if(pressed)input.set(source,code);else input.delete(source);
   keys.clear();
@@ -539,7 +602,7 @@ function clearKeys(){
   buttons.forEach(b=>b.classList.remove('held'));
 }
 function parkingPlan(){
-  const [x,y,a]=lesson.start;
+  const [x,y,a]=startPose();
   const [goalX,goalY]=lesson.goal;
   const maxTurn=.64, radius=wheelbase/Math.tan(maxTurn);
   const steps=[];
@@ -553,7 +616,15 @@ function parkingPlan(){
     }
     steps.push({title,command,distance,angle,samples,target:pose});
   }
-  if(mode==='parallel'){
+  if(mode==='parallel'&&flowVariant==='bay'){
+    const angle=55*Math.PI/180;
+    step('Đánh lái trái, tiến chếch lên','Xe đang song song ô đỗ. Dừng, đánh hết lái trái rồi tiến chậm đến khung nét đứt.',
+      radius*angle,-maxTurn);
+    step('Lùi thẳng về phía ô','Trả thẳng lái, lùi đến khi bánh sau bên trái gần chạm vạch trái của ô.',
+      -(goalX-x)/Math.sin(angle),0);
+    step('Đưa đuôi xe vào ô','Dừng, đánh hết lái trái rồi lùi đến khi thân xe song song với lề.',
+      -radius*angle,-maxTurn);
+  }else if(mode==='parallel'){
     const angle=Math.acos(1-(goalX-x)/(2*radius));
     step('Căn ngang xe đỗ phía trước','Trả lái thẳng và nhích đến khung nét đứt.',
       y-(goalY-2*radius*Math.sin(angle)),0);
@@ -579,8 +650,13 @@ function resetParkingFlow(){
   flowIndex=0;
   if(!lesson.goal)flowEnabled=false;
   flowSteps=flowEnabled?parkingPlan():[];
-  byId('parking-flow-toggle').hidden=!lesson.goal;
+  const parallel=mode==='parallel';
+  byId('parking-flow-toggle').hidden=!lesson.goal||parallel;
   byId('parking-flow-toggle').setAttribute('aria-pressed',flowEnabled);
+  byId('flow-choices').hidden=!parallel;
+  for(const button of flowButtons){
+    button.setAttribute('aria-pressed',flowEnabled&&flowVariant===button.dataset.flow);
+  }
   byId('parking-flow').hidden=!flowEnabled;
   if(flowEnabled)updateParkingFlow(false);
 }
@@ -650,6 +726,25 @@ byId('parking-flow-toggle').onclick=()=>{
   flowEnabled=!flowEnabled;
   resetParkingFlow();
   byId('parking-flow-toggle').blur();
+};
+for(const button of flowButtons)button.onclick=()=>{
+  if(flowEnabled&&flowVariant===button.dataset.flow){
+    flowEnabled=false;
+    resetParkingFlow();
+  }else{
+    flowEnabled=true;
+    flowVariant=button.dataset.flow;
+    reset();
+  }
+  button.blur();
+};
+// Long-pressing a control must not open the browser's copy/translate menu.
+for(const area of [document.querySelector('header'),byId('game')])
+  for(const type of ['contextmenu','selectstart'])
+    area.addEventListener(type,e=>e.preventDefault());
+byId('about-open').onclick=()=>{
+  clearKeys();
+  byId('about').showModal();
 };
 function setPlacement(enabled){
   placing=enabled;
@@ -758,7 +853,7 @@ const driveCodes=['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','Space'];
 const aliases={KeyW:'ArrowUp',KeyS:'ArrowDown',KeyA:'ArrowLeft',KeyD:'ArrowRight'};
 addEventListener('keydown',e=>{
   if(e.ctrlKey||e.metaKey||e.altKey||e.shiftKey)return;
-  if(e.target instanceof HTMLInputElement)return;
+  if(e.target instanceof HTMLInputElement||byId('about').open)return;
   if(lesson.course&&courseKeys[e.code]&&!e.repeat){e.preventDefault();applyCourseControl(courseKeys[e.code]);}
   if(e.code==='Space'&&e.target instanceof HTMLButtonElement)return;
   const code=aliases[e.code]||e.code;
