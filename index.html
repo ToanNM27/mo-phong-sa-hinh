@@ -106,6 +106,11 @@
 .parking-flow strong{color:#fff4c1}
 
 .header-actions{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.flow-choices{grid-column:1/-1;display:grid;gap:6px;padding:9px;border:1px solid #354747;border-radius:12px;background:#1b2728}
+.flow-choices span{font-size:13px;font-weight:650;color:#bbceca}
+.flow-choices div{display:grid;gap:6px}
+.game-actions button{flex:1 1 calc(50% - 4px);min-width:0;min-height:40px}
+.flow-choices button{min-height:44px;padding:6px;font-size:14px}
 .about-open{background:transparent}
 .about{max-width:min(440px,calc(100vw - 32px));background:#1b2728;color:#f1f7ee;border:1px solid #445659;border-radius:14px;padding:18px}
 .about::backdrop{background:#050b0cb3}
@@ -120,12 +125,16 @@
   header nav button,.game-actions button,.mirror-settings button{touch-action:manipulation}
   .panel{min-width:0}
   .panel .game-actions{
-    display:grid;
-    grid-template-columns:repeat(2,minmax(0,1fr));
+    display:flex;
+    flex-wrap:wrap;
+    gap:8px;
     grid-column:1/-1;
     grid-row:2;
   }
-  .game-actions button{min-width:0;min-height:44px;padding:7px 5px;overflow-wrap:anywhere}
+  .game-actions button{flex:1 1 calc(50% - 4px);min-width:0;min-height:44px;padding:7px 5px}
+  .panel .flow-choices{grid-row:3}
+  .flow-choices div{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .flow-choices button{touch-action:manipulation}
   #cockpit-toggle{order:-1}
   .cockpit-mirrors figcaption{
     width:1px;height:1px;padding:0;overflow:hidden;clip-path:inset(50%);white-space:nowrap;
@@ -181,7 +190,8 @@
 <button data-course-control="belt" title="Phím B" aria-pressed="false">Dây an toàn</button><button data-course-control="left" title="Phím Q" aria-pressed="false">Xi-nhan trái</button><button data-course-control="right" title="Phím E" aria-pressed="false">Xi-nhan phải</button><button data-course-control="gear" title="Phím F">Số 1</button><button data-course-control="engine" title="Phím I" aria-pressed="true">Máy đang bật</button>
 </div><p class="hint keyboard-label">G để trả lái, Esc để tập lại. Góc lái được giữ khi bạn thả phím.</p><p class="hint touch-label">Giữ đồng thời nút di chuyển và nút đánh lái để vào cua.</p></section>
 <section class="card feedback"><h2 id="lesson">Ghép ngang</h2><div id="zigzag-choices" class="actions" hidden aria-label="Chiều chạy"><button data-mode="zigzagForward" aria-pressed="false">Xuôi</button><button data-mode="zigzagReverse" aria-pressed="false">Ngược</button></div><p id="status" role="status"></p><p class="hint" id="tip"></p></section>
-<div class="actions game-actions" id="game-actions"><button id="center">Trả lái</button><button id="reset">Tập lại</button><button id="guide" aria-pressed="false">Quỹ đạo</button><button id="alignment" aria-pressed="false">Canh thân xe</button><button id="parking-flow-toggle" aria-pressed="false">Hướng dẫn từng bước</button><button data-flow="car" aria-pressed="false" hidden>Gợi ý: song song xe trên</button><button data-flow="bay" aria-pressed="false" hidden>Gợi ý: song song ô đỗ</button><button id="cockpit-toggle" aria-pressed="false">Buồng lái</button><button id="placement" aria-pressed="false">Dời / xoay xe</button></div>
+<div class="actions game-actions" id="game-actions"><button id="center">Trả lái</button><button id="reset">Tập lại</button><button id="guide" aria-pressed="false">Quỹ đạo</button><button id="alignment" aria-pressed="false">Canh thân xe</button><button id="parking-flow-toggle" aria-pressed="false">Hướng dẫn từng bước</button><button id="cockpit-toggle" aria-pressed="false">Buồng lái</button><button id="placement" aria-pressed="false">Dời / xoay xe</button></div>
+<div class="flow-choices" id="flow-choices" role="group" aria-labelledby="flow-choices-title" hidden><span id="flow-choices-title">Hướng dẫn ghép ngang từng bước</span><div><button data-flow="car" aria-pressed="false">Song song xe trên</button><button data-flow="bay" aria-pressed="false">Song song ô đỗ</button></div></div>
 <section id="placement-settings" class="card placement-settings" hidden><div class="placement-title"><h2>Góc thân xe</h2><output id="placement-angle">360°</output></div><p class="hint">360° hướng lên, góc tăng theo chiều kim đồng hồ.</p><div class="placement-presets"><button type="button" data-heading="45" aria-pressed="false">45°</button><button type="button" data-heading="90" aria-pressed="false">90°</button><button type="button" data-heading="180" aria-pressed="false">180°</button><button type="button" data-heading="225" aria-pressed="false">225°</button><button type="button" data-heading="270" aria-pressed="false">270°</button><button type="button" data-heading="315" aria-pressed="false">315°</button><button type="button" data-heading="360" aria-pressed="false">360°</button></div></section>
 <section class="card parking-flow" id="parking-flow" hidden aria-label="Hướng dẫn ghép xe">
 <h2 id="parking-flow-title"></h2>
@@ -642,8 +652,8 @@ function resetParkingFlow(){
   const parallel=mode==='parallel';
   byId('parking-flow-toggle').hidden=!lesson.goal||parallel;
   byId('parking-flow-toggle').setAttribute('aria-pressed',flowEnabled);
+  byId('flow-choices').hidden=!parallel;
   for(const button of flowButtons){
-    button.hidden=!parallel;
     button.setAttribute('aria-pressed',flowEnabled&&flowVariant===button.dataset.flow);
   }
   byId('parking-flow').hidden=!flowEnabled;
