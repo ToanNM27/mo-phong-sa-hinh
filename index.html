@@ -154,7 +154,7 @@ header,.game{-webkit-user-select:none;user-select:none;-webkit-touch-callout:non
 <dialog id="about" class="about" aria-labelledby="about-title">
 <h2 id="about-title">Giới thiệu</h2>
 <ul>
-<li>Ủng hộ mình 1 tim 1 follow nha: <a href="https://vt.tiktok.com/ZSs6LPgG5/" target="_blank" rel="noopener">TikTok</a></li>
+<li>Ủng hộ mình 1 ❤ 1 follow 👀 nha: <a href="https://vt.tiktok.com/ZSs6LPgG5/" target="_blank" rel="noopener">TikTok</a></li>
 <li>Liên hệ và góp ý: <a href="https://t.me/toannm27" target="_blank" rel="noopener">t.me/toannm27</a></li>
 <li>LinkedIn: <a href="https://www.linkedin.com/in/to%C3%A0n-nguy%E1%BB%85n-566882231" target="_blank" rel="noopener">Toàn Nguyễn</a></li>
 </ul>
@@ -191,7 +191,7 @@ header,.game{-webkit-user-select:none;user-select:none;-webkit-touch-callout:non
 <button data-course-control="belt" title="Phím B" aria-pressed="false">Dây an toàn</button><button data-course-control="left" title="Phím Q" aria-pressed="false">Xi-nhan trái</button><button data-course-control="right" title="Phím E" aria-pressed="false">Xi-nhan phải</button><button data-course-control="gear" title="Phím F">Số 1</button><button data-course-control="engine" title="Phím I" aria-pressed="true">Máy đang bật</button>
 </div><p class="hint keyboard-label">G để trả lái, Esc để tập lại. Góc lái được giữ khi bạn thả phím.</p><p class="hint touch-label">Giữ đồng thời nút di chuyển và nút đánh lái để vào cua.</p></section>
 <section class="card feedback"><h2 id="lesson">Ghép ngang</h2><div id="zigzag-choices" class="actions" hidden aria-label="Chiều chạy"><button data-mode="zigzagForward" aria-pressed="false">Xuôi</button><button data-mode="zigzagReverse" aria-pressed="false">Ngược</button></div><p id="status" role="status"></p><p class="hint" id="tip"></p></section>
-<div class="actions game-actions" id="game-actions"><button id="center">Trả lái</button><button id="reset">Tập lại</button><button id="guide" aria-pressed="false">Quỹ đạo</button><button id="alignment" aria-pressed="false">Canh thân xe</button><button id="parking-flow-toggle" aria-pressed="false">Hướng dẫn từng bước</button><button id="cockpit-toggle" aria-pressed="false">Buồng lái</button><button id="placement" aria-pressed="false">Dời / xoay xe</button></div>
+<div class="actions game-actions" id="game-actions"><button id="center">Trả lái</button><button id="reset">Tập lại</button><button id="guide" aria-pressed="false">Quỹ đạo</button><button id="alignment" aria-pressed="true">Canh thân xe</button><button id="parking-flow-toggle" aria-pressed="false">Hướng dẫn từng bước</button><button id="cockpit-toggle" aria-pressed="false">Buồng lái</button><button id="placement" aria-pressed="false">Dời / xoay xe</button></div>
 <div class="flow-choices" id="flow-choices" role="group" aria-labelledby="flow-choices-title" hidden><span id="flow-choices-title">Hướng dẫn ghép ngang từng bước</span><div><button data-flow="car" aria-pressed="false">Song song xe trên</button><button data-flow="bay" aria-pressed="false">Song song ô đỗ</button></div></div>
 <section id="placement-settings" class="card placement-settings" hidden><div class="placement-title"><h2>Góc thân xe</h2><output id="placement-angle">360°</output></div><p class="hint">360° hướng lên, góc tăng theo chiều kim đồng hồ.</p><div class="placement-presets"><button type="button" data-heading="45" aria-pressed="false">45°</button><button type="button" data-heading="90" aria-pressed="false">90°</button><button type="button" data-heading="180" aria-pressed="false">180°</button><button type="button" data-heading="225" aria-pressed="false">225°</button><button type="button" data-heading="270" aria-pressed="false">270°</button><button type="button" data-heading="315" aria-pressed="false">315°</button><button type="button" data-heading="360" aria-pressed="false">360°</button></div></section>
 <section class="card parking-flow" id="parking-flow" hidden aria-label="Hướng dẫn ghép xe">
@@ -243,7 +243,7 @@ const flowButtons=[...document.querySelectorAll('[data-flow]')];
 function startPose(){
   return mode==='parallel'&&flowEnabled&&flowVariant==='bay'?lesson.bayStart:lesson.start;
 }
-let mode, lesson, car, steer, speed, won, showGuide = false, showAlignment = false, bumpUntil, impact;
+let mode, lesson, car, steer, speed, won, showGuide = false, showAlignment = true, bumpUntil, impact;
 function reset(next = mode) {
   mode=next;
   lesson=lessons[mode];
